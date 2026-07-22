@@ -1,0 +1,9 @@
+[
+  {"kind":"action","run_id":"r9","agent_id":"review","action":"comment","authorizing_decision":"","untrusted_as_instruction":false},
+  {"kind":"action","run_id":"r9","agent_id":"review","action":"comment","authorizing_decision":"pdp:allow","untrusted_as_instruction":true},
+  {"kind":"action","run_id":"r9","agent_id":"x","action":"comment","authorizing_decision":"pdp:allow"},
+  {"kind":"action","run_id":"r9","agent_id":"x","action":"comment","authorizing_decision":"pdp:allow"},
+  {"kind":"action","run_id":"r9","agent_id":"x","action":"comment","authorizing_decision":"pdp:allow"},
+  {"kind":"action","run_id":"r9","agent_id":"x","action":"comment","authorizing_decision":"pdp:allow"},
+  {"kind":"merge","pr":"200","changed_paths":["crypto/aes.py"],"human_approved_by":null,"disclosed":false,"dco":"machine","cross_check":false,"models":{"developer":"A","tester":"A","reviewer":"C"}}
+]

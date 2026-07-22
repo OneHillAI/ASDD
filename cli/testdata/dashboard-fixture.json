@@ -1,0 +1,41 @@
+{
+  "repo": "example/project",
+  "pulls": [
+    {"number": 10, "title": "Add rate limiter", "state": "open", "draft": false,
+     "user": {"login": "alice"}, "labels": [{"name": "fix"}],
+     "html_url": "https://example/pr/10", "updated_at": "2026-07-13T10:00:00Z",
+     "body": "## Change scope\n- [x] Normative: tightens a gate.\n\n## Impact analysis\n- What else must adjust: the intake gate and CONFORMANCE.\n- Target version: v0.2.0 (minor).\n"},
+    {"number": 11, "title": "WIP: refactor intake", "state": "open", "draft": true,
+     "user": {"login": "bob"}, "labels": [{"name": "feature"}],
+     "html_url": "https://example/pr/11", "updated_at": "2026-07-13T09:00:00Z",
+     "body": "## Change scope\n- [x] Normative: changes a lens contract.\n\n## Impact analysis\n- What else must adjust: review-flow docs.\n- Target version: v0.2.0 (minor).\n"},
+    {"number": 12, "title": "Docs: fix links", "state": "open", "draft": false,
+     "user": {"login": "alice"}, "labels": [{"name": "chore"}],
+     "html_url": "https://example/pr/12", "updated_at": "2026-07-13T08:00:00Z",
+     "body": "## Change scope\n- [x] Normative: adds a MUST.\n\n<!-- Target version: v9.9.9 left only in a comment, must not count. -->\n"},
+    {"number": 13, "title": "Add audit log", "state": "closed", "draft": false, "merged_at": "2026-07-12T12:00:00Z",
+     "user": {"login": "alice"}, "labels": [{"name": "docs"}],
+     "html_url": "https://example/pr/13", "updated_at": "2026-07-12T12:00:00Z"},
+    {"number": 14, "title": "Superseded change", "state": "closed", "draft": false,
+     "user": {"login": "carol"}, "labels": [],
+     "html_url": "https://example/pr/14", "updated_at": "2026-07-11T12:00:00Z"},
+    {"number": 15, "title": "Small tweak to the standard", "state": "open", "draft": false,
+     "user": {"login": "dave"}, "labels": [{"name": "fix"}],
+     "html_url": "https://example/pr/15", "updated_at": "2026-07-13T07:00:00Z",
+     "body": "## Change scope\n- [x] Non-normative: just a small fix.\n"}
+  ],
+  "files": {
+    "10": ["standards/disclosure.md"],
+    "11": ["agents/review-quality.md"],
+    "12": ["STANDARD.md"],
+    "15": ["standards/security.md", "README.md"]
+  },
+  "releases": [
+    {"tag_name": "v0.1.0", "name": "ASDD v0.1.0", "html_url": "https://example/rel/v0.1.0", "published_at": "2026-07-13T00:00:00Z"}
+  ],
+  "statuses": {
+    "10": {"asdd/intake": "success", "asdd/review": "success"},
+    "12": {"asdd/intake": "success", "asdd/review": "failure"},
+    "15": {"asdd/intake": "success", "asdd/review": "failure"}
+  }
+}

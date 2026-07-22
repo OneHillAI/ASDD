@@ -1,0 +1,103 @@
+<svg width="720" viewBox="0 0 720 916" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="The ASDD agent roster: every agent grouped by pipeline stage - listen, define the spec, build, review, merge, after - with which you set a model for.">
+<rect x="1" y="1" width="718" height="914" rx="14" fill="#FFFFFF" stroke="#E3E5E8"/>
+<text x="360" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#17191C">the agents, end to end</text>
+<rect x="22" y="51" width="11" height="11" rx="3" fill="#B45309"/>
+<text x="39" y="60" font-size="11.5" fill="#5A5F66">you set the model</text>
+<rect x="168" y="51" width="11" height="11" rx="3" fill="#6D28D9"/>
+<text x="185" y="60" font-size="11.5" fill="#5A5F66">bring your own</text>
+<rect x="295" y="51" width="11" height="11" rx="3" fill="#8A8177"/>
+<text x="312" y="60" font-size="11.5" fill="#5A5F66">deterministic gate</text>
+<rect x="448" y="51" width="11" height="11" rx="3" fill="#1D9E75"/>
+<text x="465" y="60" font-size="11.5" fill="#5A5F66">human</text>
+<rect x="22" y="88" width="676" height="24" rx="6" fill="#E4F2F5" stroke="#0E7490" stroke-width="0.8"/>
+<rect x="29" y="92" width="16" height="16" rx="4" fill="#0E7490"/>
+<text x="37" y="104" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">1</text>
+<text x="54" y="104" font-size="13" font-weight="600" fill="#0B5563">Listen</text>
+<text x="690" y="104" text-anchor="end" font-size="11" fill="#3A7787">inbound, from any channel</text>
+<rect x="22" y="120" width="217" height="56" rx="6" fill="#E4F2F5" stroke="#0E7490" stroke-width="0.8"/>
+<rect x="223" y="128" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="34" y="143" font-size="12.5" font-weight="600" fill="#0B5563">Interaction</text>
+<text x="34" y="161" font-size="11" fill="#3A7787">the listener; any channel</text>
+<rect x="251" y="120" width="217" height="56" rx="6" fill="#E4F2F5" stroke="#0E7490" stroke-width="0.8"/>
+<rect x="452" y="128" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="263" y="143" font-size="12.5" font-weight="600" fill="#0B5563">Triage</text>
+<text x="263" y="161" font-size="11" fill="#3A7787">labels + routes issues</text>
+<rect x="480" y="120" width="217" height="56" rx="6" fill="#E4F2F5" stroke="#0E7490" stroke-width="0.8"/>
+<rect x="681" y="128" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="492" y="143" font-size="12.5" font-weight="600" fill="#0B5563">Support</text>
+<text x="492" y="161" font-size="11" fill="#3A7787">answers from the docs</text>
+<rect x="22" y="202" width="676" height="24" rx="6" fill="#FBEAD9" stroke="#B45309" stroke-width="0.8"/>
+<rect x="29" y="206" width="16" height="16" rx="4" fill="#B45309"/>
+<text x="37" y="218" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">2</text>
+<text x="54" y="218" font-size="13" font-weight="600" fill="#8A3F09">Define the spec</text>
+<text x="690" y="218" text-anchor="end" font-size="11" fill="#9A5A22">the design phase</text>
+<rect x="184" y="234" width="351" height="56" rx="6" fill="#FBEAD9" stroke="#B45309" stroke-width="0.8"/>
+<rect x="519" y="242" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="196" y="257" font-size="12.5" font-weight="600" fill="#8A3F09">Spec agent</text>
+<text x="196" y="275" font-size="11" fill="#9A5A22">helps you define the spec</text>
+<rect x="22" y="316" width="676" height="24" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.8"/>
+<rect x="29" y="320" width="16" height="16" rx="4" fill="#534AB7"/>
+<text x="37" y="332" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">3</text>
+<text x="54" y="332" font-size="13" font-weight="600" fill="#3C3489">Build</text>
+<text x="690" y="332" text-anchor="end" font-size="11" fill="#5A52A0">from the spec</text>
+<rect x="184" y="348" width="351" height="56" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.8"/>
+<rect x="519" y="356" width="9" height="9" rx="2.5" fill="#6D28D9"/>
+<text x="196" y="371" font-size="12.5" font-weight="600" fill="#3C3489">Developer</text>
+<text x="196" y="389" font-size="11" fill="#5A52A0">builds from the spec</text>
+<rect x="22" y="430" width="676" height="24" rx="6" fill="#FBE4E1" stroke="#C0392B" stroke-width="0.8"/>
+<rect x="29" y="434" width="16" height="16" rx="4" fill="#C0392B"/>
+<text x="37" y="446" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">4</text>
+<text x="54" y="446" font-size="13" font-weight="600" fill="#8C2A20">Review</text>
+<text x="690" y="446" text-anchor="end" font-size="11" fill="#A6483B">independent, a different model than built it</text>
+<rect x="22" y="462" width="217" height="56" rx="6" fill="#FBE4E1" stroke="#C0392B" stroke-width="0.8"/>
+<rect x="223" y="470" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="34" y="485" font-size="12.5" font-weight="600" fill="#8C2A20">Code lens</text>
+<text x="34" y="503" font-size="11" fill="#A6483B">correctness</text>
+<rect x="251" y="462" width="217" height="56" rx="6" fill="#FBE4E1" stroke="#C0392B" stroke-width="0.8"/>
+<rect x="452" y="470" width="9" height="9" rx="2.5" fill="#8A8177"/>
+<text x="263" y="485" font-size="12.5" font-weight="600" fill="#8C2A20">Security lens</text>
+<text x="263" y="503" font-size="11" fill="#A6483B">supply-chain screen</text>
+<rect x="480" y="462" width="217" height="56" rx="6" fill="#FBE4E1" stroke="#C0392B" stroke-width="0.8"/>
+<rect x="681" y="470" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="492" y="485" font-size="12.5" font-weight="600" fill="#8C2A20">Spec lens</text>
+<text x="492" y="503" font-size="11" fill="#A6483B">matches the spec</text>
+<rect x="22" y="528" width="217" height="56" rx="6" fill="#FBE4E1" stroke="#C0392B" stroke-width="0.8"/>
+<rect x="223" y="536" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="34" y="551" font-size="12.5" font-weight="600" fill="#8C2A20">Quality lens</text>
+<text x="34" y="569" font-size="11" fill="#A6483B">adversarial cross-check</text>
+<rect x="251" y="528" width="217" height="56" rx="6" fill="#FBE4E1" stroke="#C0392B" stroke-width="0.8"/>
+<rect x="452" y="536" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="263" y="551" font-size="12.5" font-weight="600" fill="#8C2A20">Test author</text>
+<text x="263" y="569" font-size="11" fill="#A6483B">extends tests from the spec</text>
+<rect x="480" y="528" width="217" height="56" rx="6" fill="#FBE4E1" stroke="#C0392B" stroke-width="0.8"/>
+<rect x="681" y="536" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="492" y="551" font-size="12.5" font-weight="600" fill="#8C2A20">Test runner</text>
+<text x="492" y="569" font-size="11" fill="#A6483B">runs the suite</text>
+<rect x="22" y="594" width="217" height="56" rx="6" fill="#FBE4E1" stroke="#C0392B" stroke-width="0.8"/>
+<rect x="223" y="602" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="34" y="617" font-size="12.5" font-weight="600" fill="#8C2A20">Contributor review</text>
+<text x="34" y="635" font-size="11" fill="#A6483B">advisory fixes to the author</text>
+<rect x="22" y="676" width="676" height="24" rx="6" fill="#E1F5EE" stroke="#1D9E75" stroke-width="0.8"/>
+<rect x="29" y="680" width="16" height="16" rx="4" fill="#1D9E75"/>
+<text x="37" y="692" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">5</text>
+<text x="54" y="692" font-size="13" font-weight="600" fill="#085041">Merge</text>
+<text x="690" y="692" text-anchor="end" font-size="11" fill="#2C7A60">authority lands on a person</text>
+<rect x="22" y="708" width="332" height="56" rx="6" fill="#E1F5EE" stroke="#1D9E75" stroke-width="0.8"/>
+<rect x="338" y="716" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="34" y="731" font-size="12.5" font-weight="600" fill="#085041">Merge review</text>
+<text x="34" y="749" font-size="11" fill="#2C7A60">independent final check</text>
+<rect x="366" y="708" width="332" height="56" rx="6" fill="#E1F5EE" stroke="#1D9E75" stroke-width="0.8"/>
+<rect x="682" y="716" width="9" height="9" rx="2.5" fill="#1D9E75"/>
+<text x="378" y="731" font-size="12.5" font-weight="600" fill="#085041">Human merge gate</text>
+<text x="378" y="749" font-size="11" fill="#2C7A60">approves + merges</text>
+<rect x="22" y="790" width="676" height="24" rx="6" fill="#EEF4DE" stroke="#5C7A1E" stroke-width="0.8"/>
+<rect x="29" y="794" width="16" height="16" rx="4" fill="#5C7A1E"/>
+<text x="37" y="806" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">6</text>
+<text x="54" y="806" font-size="13" font-weight="600" fill="#3E5314">After merge</text>
+<text x="690" y="806" text-anchor="end" font-size="11" fill="#5A6E2E">trusted, post-merge</text>
+<rect x="184" y="822" width="351" height="56" rx="6" fill="#EEF4DE" stroke="#5C7A1E" stroke-width="0.8"/>
+<rect x="519" y="830" width="9" height="9" rx="2.5" fill="#B45309"/>
+<text x="196" y="845" font-size="12.5" font-weight="600" fill="#3E5314">Documentation</text>
+<text x="196" y="863" font-size="11" fill="#5A6E2E">docs, wiki, impact log</text>
+<text x="360" y="902" text-anchor="middle" font-size="11.5" fill="#5A5F66">Every model-backed agent runs on one runtime you choose; the developer is bring-your-own, and developer != test agents.</text>
+</svg>

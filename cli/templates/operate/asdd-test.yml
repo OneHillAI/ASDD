@@ -1,0 +1,75 @@
+# ASDD operate - test agent (post-merge regression run). TEMPLATE.
+#
+# Installed into an adopter's .github/workflows/ by `cli/init.sh --goose`. It runs the test-runner agent
+# after a change lands on main and posts the result on the merged PR.
+#
+# It triggers on push to main, so the input is TRUSTED (a human already reviewed and merged): that is why
+# a tool-using agent (the test-runner has a shell, it runs the suite) is acceptable here, and a single
+# workflow is fine. The tester must NOT run automatically on untrusted pre-merge PR content: running a
+# stranger's code needs an egress-free, secret-isolated sandbox, which this kit does not ship (see
+# docs/guides/operate-in-ci.md). The runner calls `operate-guard` to enforce that rule mechanically.
+#
+# It reports; it never merges and never edits code. Advisory: it posts a comment for a human to act on.
+# Authoring tests as a change is built is the produce loop (asdd operate-run, see operate-goose.md); this
+# is the trusted post-merge regression run.
+
+name: ASDD test
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: asdd-test-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main (need history for the change diff)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 50
+          persist-credentials: false
+
+      - name: Install Goose (best-effort; the run dry-runs if absent)
+        run: |
+          curl -fsSL https://github.com/block/goose/releases/download/stable/download_cli.sh | CONFIGURE=false bash || echo "goose install failed; will dry-run"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # An operate agent in CI needs BOTH the shared provider pair and its own role's pair in the env, or
+      # the per-role override is silently inert. This is the test_runner role's suffix; unset secrets/vars
+      # evaluate to empty, so a single-provider deployment simply falls back to the shared pair.
+      - name: Run the test agent (trusted post-merge input)
+        env:
+          ASDD_RUNTIME_TOKEN: ${{ secrets.ASDD_RUNTIME_TOKEN }}
+          ASDD_MODEL_URL: ${{ vars.ASDD_MODEL_URL }}
+          ASDD_MODEL: ${{ vars.ASDD_MODEL }}
+          ASDD_RUNTIME_TOKEN__TEST_RUNNER: ${{ secrets.ASDD_RUNTIME_TOKEN__TEST_RUNNER }}
+          ASDD_MODEL_URL__TEST_RUNNER: ${{ vars.ASDD_MODEL_URL__TEST_RUNNER }}
+        run: bash .github/asdd/operate/test.sh "${{ github.sha }}" test-report.md
+
+      - name: Post the result on the merged PR (or the commit)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [ -s test-report.md ] || { echo "no report; nothing to post"; exit 0; }
+          body="$(cat test-report.md)"
+          footer=$'\n\n<sub>Reported by the ASDD test agent (advisory, post-merge). A human acts on it. Nothing merges automatically.</sub>'
+          pr="$(gh api "repos/$REPO/commits/$SHA/pulls" -H "Accept: application/vnd.github.groot-preview+json" --jq '.[0].number' 2>/dev/null || true)"
+          if [ -n "${pr:-}" ] && [ "$pr" != "null" ]; then
+            printf '%s%s' "$body" "$footer" | gh pr comment "$pr" --repo "$REPO" --body-file -
+            echo "posted on PR #$pr"
+          else
+            printf '%s%s' "$body" "$footer" | gh api "repos/$REPO/commits/$SHA/comments" -f body=@- >/dev/null
+            echo "posted as a commit comment (no associated PR)"
+          fi

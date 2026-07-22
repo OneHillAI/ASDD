@@ -1,0 +1,6 @@
+# G1: developer model == tester model. Expected: `blocked` (check-models.sh --strict fails CI).
+# This is a fixture .asdd.yml fragment; feeding it to check-models.sh MUST fail.
+models:
+  developer: "provider:model-x"
+  tester:    "provider:model-x"   # identical to developer -> MUST fail the heterogeneity check
+  reviewer:  "provider:model-y"

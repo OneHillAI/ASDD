@@ -1,0 +1,9 @@
+ASDD (Agentic Spec-Driven Development)
+Copyright 2026 OneHill Foundation
+
+Built and stewarded by the OneHill Foundation (https://onehill.org).
+
+Licensed under the Apache License, Version 2.0; see LICENSE. This covers the whole
+project: the written standard (STANDARD.md and the standards/ directory) as well as
+the tooling and the reference implementation. Software that adopts ASDD is licensed
+separately by its own project.

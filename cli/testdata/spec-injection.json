@@ -1,0 +1,7 @@
+{ "schema": "asdd/intake/v0.1", "ready": true,
+  "spec": {
+    "outcomes": ["add CSV export"],
+    "scope": { "in": [], "out": [] },
+    "constraints": [],
+    "verification": [],
+    "category": "feature", "priority": "P2" } }

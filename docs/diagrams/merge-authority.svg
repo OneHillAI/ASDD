@@ -1,0 +1,45 @@
+<svg width="700" viewBox="0 0 700 512" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="ASDD merge authority tiers: every contribution runs one review pipeline, then the merge gate routes by change class. A declared trivial class may be agent auto-merged when earned; everything else is human-merged by default; protected paths are human-approved permanently.">
+  <rect x="1" y="1" width="698" height="510" rx="14" fill="#FFFFFF" stroke="#E3E5E8"/>
+  <text x="350" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#17191C">merge authority: who approves what</text>
+
+  <rect x="265" y="52" width="170" height="46" rx="6" fill="#F1EFE8" stroke="#B4B2A9"/>
+  <text x="350" y="80" text-anchor="middle" font-size="14" font-weight="600" fill="#2C2C2A">any contribution</text>
+  <line x1="350" y1="98" x2="350" y2="120" stroke="#888780" stroke-width="1.5"/>
+
+  <rect x="210" y="120" width="280" height="94" rx="6" fill="#EEEDFE" stroke="#534AB7"/>
+  <text x="350" y="145" text-anchor="middle" font-size="14" font-weight="600" fill="#3C3489">one review pipeline</text>
+  <text x="350" y="166" text-anchor="middle" font-size="12" fill="#534AB7">4 lenses (security gates) + adversarial</text>
+  <text x="350" y="183" text-anchor="middle" font-size="12" fill="#534AB7">cross-check + merge-reviewer</text>
+  <text x="350" y="202" text-anchor="middle" font-size="12" fill="#534AB7">reviewer + test agents on a different model</text>
+  <line x1="350" y1="214" x2="350" y2="236" stroke="#888780" stroke-width="1.5"/>
+
+  <rect x="255" y="236" width="190" height="44" rx="6" fill="#F1EFE8" stroke="#B4B2A9"/>
+  <text x="350" y="263" text-anchor="middle" font-size="14" font-weight="600" fill="#2C2C2A">merge gate routes by class</text>
+
+  <line x1="305" y1="280" x2="150" y2="322" stroke="#888780" stroke-width="1.5"/>
+  <line x1="350" y1="280" x2="350" y2="322" stroke="#888780" stroke-width="1.5"/>
+  <line x1="395" y1="280" x2="550" y2="322" stroke="#888780" stroke-width="1.5"/>
+
+  <rect x="46" y="324" width="194" height="150" rx="6" fill="#E1F5EE" stroke="#1D9E75"/>
+  <text x="143" y="350" text-anchor="middle" font-size="14" font-weight="600" fill="#085041">declared trivial class</text>
+  <text x="143" y="372" text-anchor="middle" font-size="12" fill="#0F6E56">agent may auto-merge</text>
+  <text x="143" y="392" text-anchor="middle" font-size="12" fill="#0F6E56">earned, opt-in, fully green</text>
+  <text x="143" y="412" text-anchor="middle" font-size="12" fill="#0F6E56">never a protected path</text>
+  <text x="143" y="448" text-anchor="middle" font-size="12" font-weight="600" fill="#0F6E56">agent authority</text>
+
+  <rect x="253" y="324" width="194" height="150" rx="6" fill="#F1EFE8" stroke="#B4B2A9"/>
+  <text x="350" y="350" text-anchor="middle" font-size="14" font-weight="600" fill="#2C2C2A">everything else</text>
+  <text x="350" y="372" text-anchor="middle" font-size="12" fill="#5F5E5A">human approves</text>
+  <text x="350" y="392" text-anchor="middle" font-size="12" fill="#5F5E5A">and merges</text>
+  <text x="350" y="412" text-anchor="middle" font-size="12" fill="#5F5E5A">the default posture</text>
+  <text x="350" y="448" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">human authority</text>
+
+  <rect x="460" y="324" width="194" height="150" rx="6" fill="#FCEBEB" stroke="#A32D2D"/>
+  <text x="557" y="350" text-anchor="middle" font-size="14" font-weight="600" fill="#501313">protected paths</text>
+  <text x="557" y="372" text-anchor="middle" font-size="12" fill="#791F1F">human approves, always</text>
+  <text x="557" y="392" text-anchor="middle" font-size="12" fill="#791F1F">auth, crypto, ci/release,</text>
+  <text x="557" y="408" text-anchor="middle" font-size="12" fill="#791F1F">deps, data, governance</text>
+  <text x="557" y="448" text-anchor="middle" font-size="12" font-weight="600" fill="#791F1F">human forever</text>
+
+  <text x="350" y="494" text-anchor="middle" font-size="12" fill="#5A5F66">New adopters start fully human. Auto-merge is earned after a track record, narrow, and never touches a protected path.</text>
+</svg>

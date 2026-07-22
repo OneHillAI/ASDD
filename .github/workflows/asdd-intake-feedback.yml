@@ -1,0 +1,53 @@
+# ASDD - intake feedback (the contributor-facing half of intake).
+#
+# The intake gate itself is READ-ONLY and posts nothing. This companion runs AFTER it (workflow_run), in
+# the base context, to tell the contributor what to fix - a comment on the PR, not just a red check they
+# have to open the Actions log to understand. It holds write scope but reads only intake.json (the
+# ASDD-generated verdict + problem strings) and the pr_number; it never reads untrusted PR content and
+# never merges. This is the same isolation as the review publish job: untrusted input touches only the
+# read-only job; the write-scoped job sees only a structured, ASDD-produced artifact.
+
+name: ASDD intake feedback
+
+on:
+  workflow_run:
+    workflows: ["ASDD intake"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read     # download the intake artifact across runs
+  issues: write     # post/update one PR comment (issue comments); no other write scope
+
+concurrency:
+  group: asdd-intake-feedback-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  feedback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the base repo (trusted scripts only)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Download the intake artifact (the verdict, as data)
+        id: fetch
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: asdd-intake
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .asdd-work
+
+      - name: Post or update the intake feedback comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # No artifact (a draft or a skipped run) means there is nothing to give feedback on.
+          [ -f .asdd-work/intake.json ] || { echo "no intake artifact; nothing to do."; exit 0; }
+          bash .github/asdd/post-intake-feedback.sh .asdd-work

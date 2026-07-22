@@ -1,0 +1,7 @@
+{ "schema": "asdd/intake/v0.1", "ready": true,
+  "spec": {
+    "outcomes": ["GET /items returns at most page_size items and a next_cursor"],
+    "scope": { "in": ["the /items read endpoint and its handler"], "out": ["write endpoints", "the data model"] },
+    "constraints": ["default page_size 20, max 100", "cursor is opaque and stable across inserts"],
+    "verification": ["the acceptance tests pass", "existing tests still pass"],
+    "category": "feature", "priority": "P2" } }
