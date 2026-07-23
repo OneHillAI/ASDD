@@ -5,7 +5,7 @@
 }
 
 html[data-theme='dark'] .hero {
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(201, 154, 91, 0.08) 0%, transparent 100%);
 }
 
 .heroTitle {
