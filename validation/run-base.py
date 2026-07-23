@@ -60,6 +60,9 @@ CHECKS = [
      "zero", "each operate recipe keeps its invariants: gates wired, public stays execution-free, membrane intact"),
     ("review lenses resolve via the roster",    ["sh", "cli/run-review-resolve.test.sh"],
      "zero", "run-review resolves the reviewer role's model/endpoint/key and never prints the key"),
+    ("review runtime recovers model JSON",       ["bash", ".github/asdd/runtime/extract-json.test.sh"],
+     "zero", "a reasoning model wraps its JSON in prose/fences/braces; the runtime recovers the review "
+             "object instead of losing it to a human-review placeholder, and still rejects genuine non-JSON"),
     ("roster resolves to a role's model",       ["sh", "cli/resolve-model.test.sh"],
      "zero", "a role runs on models.<role> from the roster, ASDD_MODEL is only the fallback, unset fails loudly"),
     ("kit map matches reality",                 ["sh", "cli/kit-check.test.sh"],
