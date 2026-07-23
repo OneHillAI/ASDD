@@ -1,4 +1,4 @@
-# Spec: robust review-JSON extraction from real model output
+# Spec: recovering the review JSON from real model output
 
 ## Problem
 
