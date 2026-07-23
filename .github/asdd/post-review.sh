@@ -28,7 +28,7 @@ LENSES="$(jq -r '
 ' "$REVIEW")"
 
 NOTE=""
-[ "$MODE" = "dry-run" ] && NOTE=$'\n> **NOT A REVIEW.** No model is connected, so the review agent did not run. This is a placeholder, not a judgement: do not approve it as if the change were reviewed. Only the deterministic gates (intake, the security scan) are real here. Connect a runtime (`ASDD_MODEL_URL` variable + `ASDD_RUNTIME_TOKEN` secret), then re-run for a real review. `asdd connect-check` reports which agents are connected.\n'
+[ "$MODE" = "dry-run" ] && NOTE=$'\n> Dry-run: no agent runtime is wired yet, so this is a placeholder. The lenses become live once a runtime is connected.\n'
 
 BODY="$(cat <<MD
 **ASDD review - advisory** (recommendation: \`${REC}\`)
