@@ -198,14 +198,20 @@ def print_steps(roles, recipe_dir):
     print("       ASDD_MODEL_URL       (variable)  full .../v1/chat/completions URL")
     print(f"       ASDD_MODEL           (variable)  the reviewer model"
           f"{' (' + reviewer + ')' if reviewer else ''}")
+    print("  3. Give your agents their own GitHub identity, so they open PRs you approve:")
+    print("       a bot account with a fine-grained token (simplest for one person),")
+    print("       or a GitHub App (scoped, revocable). You cannot approve your own PRs,")
+    print("       so your agents must not open them as you, or the merge gate is unsatisfiable.")
+    print("       The token is a host env var for produce-loop agents, a repo secret for CI agents.")
+    print("       Walk-through: docs/guides/using-asdd-solo.md")
     runs = deployment_run_commands(by_key, recipe_dir)
     if runs:
-        print("  3. Run each deployment agent with its model:")
+        print("  4. Run each deployment agent with its model:")
         for r in runs:
             print(r)
     else:
-        print("  3. Set the deployment role models above to get ready-to-run commands.")
-    print("  4. Prove the gates run with no keys:")
+        print("  4. Set the deployment role models above to get ready-to-run commands.")
+    print("  5. Prove the gates run with no keys:")
     print("       sh cli/asdd-mcp.test.sh")
 
 

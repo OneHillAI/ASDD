@@ -55,6 +55,11 @@ On your default branch (Settings, Branches, add a branch protection rule), turn 
 3. **Block direct pushes** to the default branch (the pull-request requirement does this) and do not allow
    bypassing the above, so the gates apply to everyone, maintainers included.
 
+Because a protected-path change needs a named human **other than the author**, and GitHub blocks
+self-approval, your agents must open PRs under **their own identity** (a bot account or a GitHub App), not
+your account. Otherwise you cannot approve your own agents' PRs and the merge gate is unsatisfiable,
+especially as one person. See [using ASDD as one person](using-asdd-solo.md) for the identity setup.
+
 Optionally require branches to be up to date before merging. It is stricter but means an out-of-date PR
 must be rebased before it can merge; leave it off if you prefer fewer rebases.
 

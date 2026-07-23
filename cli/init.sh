@@ -229,6 +229,7 @@ if [ "$GOOSE" -eq 1 ]; then
   copy "$SELF/cli/templates/operate/dev-council.sh" "$TARGET/.github/asdd/operate/dev-council.sh"
   say "the developer is bring-your-own; the deployment runs test-author / test-runner / documentation / interaction (spec-driven OP)."
   say "optional: the developer council (asdd dev-council --change ID, or .github/asdd/operate/dev-council.sh) implements a change with 2-5 diverse models; opt in by setting dev_council.models in .asdd.yml."
+  say "give your agents their OWN GitHub identity (a bot account + token, or a GitHub App) so they open PRs you approve; you cannot approve your own PRs, so the merge gate is unsatisfiable if agents open them as you. See docs/guides/using-asdd-solo.md."
   say "guided setup:  goose run --recipe recipes/setup.yaml --model <your model>   (it reads asdd-kit.yml, the map)"
   say "the docsync + test workflows run the documentation and test agents post-merge (trusted); both dry-run until a model is wired."
   cat <<'GOOSE'
