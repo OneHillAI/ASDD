@@ -85,7 +85,7 @@ JSON output**, not just tool tolerance. That is the **reviewer and the model len
 **operator-run fixed-prompt agents** that share the same adapter through `run-agent.sh` (triage, support,
 review-contributor, review-merge). A reasoning model wraps its answer in analysis prose or emits it in a
 separate `reasoning_content` field; the adapter now recovers the JSON object from either
-([robust extraction](../../.github/asdd/runtime/extract-json.py)), so GLM-5.2 works for these roles. But a
+([JSON recovery](../../.github/asdd/runtime/extract-json.py)), so GLM-5.2 works for these roles. But a
 model that reliably returns a clean JSON object is the more predictable choice for them; a reasoning model
 shines as the free-form **developer** or a **developer-council** member, where prose is the point. (The
 Goose-run operate agents - documentation, test-author, test-runner, interaction - take a different path:
