@@ -31,9 +31,13 @@ if bash "$ROOT/cli/init.sh" --goose "$G" >/dev/null 2>&1; then
   # so the pair must travel with asdd-mcp.py or an openspec adopter's MCP has no file to call. Same for
   # conventions-check.py, which the MCP `conventions_check` tool shells to so the operate recipes can
   # read the host project's workflow before producing anything.
-  for g in spec-check.py claim-check.py merge-eligibility.py openspec-gate.py _openspec_locate.py conventions-check.py audit.py asdd-mcp.py operate-guard.py run-agent.sh; do
+  for g in spec-check.py claim-check.py merge-eligibility.py openspec-gate.py _openspec_locate.py conventions-check.py audit.py asdd-mcp.py operate-guard.py run-agent.sh dev-council.py; do
     [ -f "$G/cli/$g" ] || { echo "FAIL: --goose did not copy cli/$g"; fail=1; }
   done
+
+  # The developer council's runner drives cli/dev-council.py; the orchestrator is useless to an adopter if
+  # the runner the docs point at never lands.
+  [ -f "$G/.github/asdd/operate/dev-council.sh" ] || { echo "FAIL: --goose copied dev-council.py but not the operate/dev-council.sh runner"; fail=1; }
 
   # The operator-run agents (triage/support/contributor/merge) run through cli/run-agent.sh, which reads
   # their docs from the runtime agents dir. run-agent is useless if the docs it drives never land.

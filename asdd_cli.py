@@ -63,6 +63,7 @@ COMMANDS = {
     "kit-check":         ["python3", os.path.join(CLI, "kit-check.py")],
     "audit":             ["python3", os.path.join(CLI, "audit.py")],
     "operate-run":       ["python3", os.path.join(CLI, "operate-run.py")],
+    "dev-council":       ["python3", os.path.join(CLI, "dev-council.py")],
     "audit-ship":        ["bash",    os.path.join(ROOT, ".github", "asdd", "audit-export.sh")],
     "audit-check":       ["python3", os.path.join(VAL, "audit-check.py")],
     "mcp":               ["python3", os.path.join(CLI, "asdd-mcp.py")],
@@ -90,6 +91,7 @@ Commands:
   kit-check [CONFIG]         keep asdd-kit.yml (the kit map) matching reality
   audit SUB ...              the agent audit ledger: append / verify / trail / corpus / knowledge
   operate-run --role R ...   run a Goose operate agent and record it deterministically
+  dev-council --change ID    optional produce-loop developer: 2-5 models propose/critique/synthesise/verify
   audit-ship LEDGER          push a local ledger to the configured private sink (e.g. .asdd-work/audit.jsonl)
   audit-check TRAIL ...      audit-log properties P1-P9
   mcp                        run the gates as an MCP server (Goose stdio extension)

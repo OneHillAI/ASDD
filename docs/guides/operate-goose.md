@@ -213,6 +213,30 @@ The gates are callable directly too: `asdd merge-eligibility ...`, `asdd spec-ch
 asdd check-models --strict     # fails if a test model == developer
 ```
 
+## Optional: the developer council
+
+The single-model developer is the default, and it is bring-your-own. If you want more than one model on a
+change, the **developer council** is an optional produce-loop developer: 2 to 5 diverse models propose,
+cross-critique, synthesise and verify one implementation of an OpenSpec change. `init --goose` copies its
+runner, and `asdd setup` offers to configure it. Turn it on by naming the models in `.asdd.yml`:
+
+```yaml
+dev_council:
+  models: ["provider:a", "provider:b", "provider:c"]   # 2 to 5; the LAST is the lead synthesiser
+```
+
+Run it in your produce session:
+
+```bash
+asdd dev-council --change my-change --transcript council.json
+# or the shipped runner:  bash .github/asdd/operate/dev-council.sh my-change
+```
+
+Wire the models like the rest of the fleet (shared `ASDD_MODEL_URL` + `ASDD_RUNTIME_TOKEN`, or per-member
+`__COUNCIL_<i>` variants). It records its process to the ledger, so the corpus and knowledge base learn
+from it. Full detail: [cli/README.md](https://github.com/OneHillAI/ASDD/blob/main/cli/README.md) and the
+contract in [agents/runtime.md](https://github.com/OneHillAI/ASDD/blob/main/agents/runtime.md).
+
 ## Share the recipes
 
 To run the agents by bare name instead of a full path, or hand someone a single recipe as a link, see

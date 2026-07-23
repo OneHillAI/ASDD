@@ -97,3 +97,32 @@ An adapter is an executable at `scripts/runtime/<name>.sh` (review) and optional
 3. Add the credential as the `ASDD_RUNTIME_TOKEN` repository secret.
 4. Open a test PR; confirm the advisory comment now reflects a real review and that the analysis job
    still holds no write scope (`scripts/conformance-check.sh` asserts this).
+
+## The developer council (optional)
+
+The developer council is an OPTIONAL produce-loop developer: 2 to 5 diverse models implement one OpenSpec
+change together. The reference orchestrator is `cli/dev-council.py` (`asdd dev-council`), runtime-neutral
+over any OpenAI-compatible endpoint. A bring-your-own runtime MAY implement it instead; to conform, it
+follows this loop and recording contract:
+
+1. **Roles.** N minus 1 **proposers** (diverse families) plus **one lead synthesiser** (the strongest
+   model, which produces the answer). N is 2 to 5 (default 3). A council model MUST differ from
+   `models.test_author` and `models.test_runner` (the heterogeneity invariant); same-family members are a
+   warning, not a failure.
+2. **The loop, bounded.** `propose` (each proposer drafts against the change's acceptance criteria) ->
+   `cross-critique` (each critiques the others ONLY against the criteria) -> `synthesise` (the lead
+   produces one result) -> `verify` (the `test-author`/`test-runner` roles, on models DISTINCT from the
+   council, extend and run the suite). Exactly one refine round on a failed verify. Default caps: one
+   critique round, one refine round.
+3. **Always one result**, plus an inspectable transcript on request. Graceful degradation: an unreachable
+   model drops to fewer proposers rather than failing the run; if the council cannot reconcile it surfaces
+   the disagreement rather than forcing a synthesis.
+4. **Recording (STANDARD 1.3).** Record the process to the ledger under role `developer`: the proposals,
+   critiques, disagreements, the synthesis rationale, and the verify outcome. Route the curated learnings
+   into the knowledge view with the record's `lens`: `council-synthesis` (a verified result -> an OKGF
+   `exemplar`) and `council-rejected` (a set-aside approach -> an OKGF `rejected` page). The reasoning is a
+   clean decision statement, never the drafted code, so `asdd audit corpus` and `asdd audit knowledge`
+   stay content-safe. Inputs are trusted (the operator's own change), so no untrusted-input fence applies.
+
+The council never merges and never reviews its own output. The synthesised change still passes the normal
+intake and review gates; review and test stay independent on different models.

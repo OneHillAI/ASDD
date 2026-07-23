@@ -239,6 +239,34 @@ def apply_sets(roles, sets):
     return roles
 
 
+def prompt_dev_council(lines):
+    """Optional, opt-in: offer to configure the developer council and append a dev_council block if the
+    operator wants it and none exists. The single-model developer stays the default. Returns True if it
+    changed `lines`."""
+    if any(l.rstrip() == "dev_council:" for l in lines):
+        print("\nDeveloper council: already configured (dev_council in .asdd.yml); edit it there to change.")
+        return False
+    print("\nDeveloper council (optional): 2 to 5 diverse models propose, cross-critique, synthesise and")
+    print("verify one implementation of an OpenSpec change. The single-model developer stays the default.")
+    try:
+        if input("  configure it now? [y/N]> ").strip().lower() not in ("y", "yes"):
+            return False
+        raw = input("  council models, comma-separated (2 to 5; the LAST is the lead synthesiser)\n    models> ").strip()
+    except EOFError:
+        return False
+    models = [m.strip() for m in raw.split(",") if m.strip()]
+    if not (2 <= len(models) <= 5):
+        print("  need 2 to 5 models; leaving the council unconfigured (set dev_council in .asdd.yml later).")
+        return False
+    lines.extend(["",
+                  "# Developer council (optional; `asdd dev-council`). 2 to 5 diverse models; the LAST is the lead.",
+                  "dev_council:", "  models:"]
+                 + [f'    - "{m}"' for m in models]
+                 + ["  max_critique_rounds: 1", "  max_refine_rounds: 1"])
+    print(f"  added a dev_council block with {len(models)} models.")
+    return True
+
+
 def main():
     args = sys.argv[1:]
     sets = []
@@ -300,6 +328,7 @@ def main():
     elif sys.stdin.isatty():
         prompt_roles(roles)
         spec_tool_new = prompt_spec_tool(current_spec_tool(lines))
+        prompt_dev_council(lines)   # opt-in; appends a dev_council block if wanted
         changed = True
     else:
         print(f"Current model assignments in {config} (no tty; pass --set to change):")

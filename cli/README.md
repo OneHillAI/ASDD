@@ -365,6 +365,33 @@ way the gate resolves the reviewer; with no model wired it prints a labelled dry
 assembled safely). The role defaults per agent (`triage`->triage, `review-contributor`->review,
 `review-merge`->merge, `support`->spec); pass `--role` to override.
 
+## dev-council
+
+`asdd dev-council --change <openspec-change-id> [--transcript FILE] [--test-cmd CMD] [--models a,b,c]` runs
+the **optional** developer council: instead of one model implementing a change, 2 to 5 diverse models
+**propose -> cross-critique -> synthesise -> verify** against the change's acceptance criteria and return
+one result. It is a produce-loop developer (a sibling to `run-agent`), opt-in; the single-model developer
+stays the default. Configure it in `.asdd.yml`:
+
+```yaml
+dev_council:
+  models: ["provider:a", "provider:b", "provider:c"]   # 2 to 5; the LAST is the lead synthesiser
+  max_critique_rounds: 1
+  max_refine_rounds: 1
+```
+
+Bring the models either way: a shared `ASDD_MODEL_URL` + `ASDD_RUNTIME_TOKEN` with the model names above,
+or per-member `ASDD_MODEL_URL__COUNCIL_<i>` / `ASDD_RUNTIME_TOKEN__COUNCIL_<i>`. It is **spec-and-test
+grounded, not consensus**: proposers draft against the acceptance criteria, the verify stage reuses the
+`test-author`/`test-runner` roles on models **distinct** from the council, and one refine round runs on a
+failure. A heterogeneity check warns on same-family members and fails if a council model also serves a
+test role. It **records its process** (proposals, critiques, disagreements, synthesis rationale, verify)
+to the ledger, so `asdd audit corpus` and `asdd audit knowledge` learn from it: a set-aside approach
+becomes a `rejected` OKGF page, the verified synthesis an `exemplar`. Content is digested, never the code.
+With no model wired it prints a labelled dry run. The Goose kit ships the runner
+`.github/asdd/operate/dev-council.sh`; a bring-your-own runtime implements the contract in
+[agents/runtime.md](../agents/runtime.md).
+
 ## doctor
 
 `asdd doctor [CONFIG]` preflights the operate path before you rely on it. It checks Python, Goose, the

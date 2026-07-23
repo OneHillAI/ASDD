@@ -35,6 +35,9 @@ CHECKS = [
     ("operate-run deterministic emission",      ["bash", "cli/operate-run.test.sh"],
      "zero", "the run wrapper emits exactly one record even when the agent run produced nothing, so a "
              "provider timeout mid-run cannot silently lose the action"),
+    ("developer council orchestrator",          ["bash", "cli/dev-council.test.sh"],
+     "zero", "the optional multi-model developer: sizing (2 to 5), heterogeneity (developer != testers), "
+             "dry-run, one record per run, and the council's learnings deriving exemplar/rejected OKGF pages"),
     ("audit ledger: record, corpus, knowledge", ["bash", "cli/audit.test.sh"],
      "zero", "every role records (developer included), the chain detects tamper, and the training and "
              "knowledge views read the trail without leaking chain plumbing or reviewed content"),
