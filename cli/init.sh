@@ -134,7 +134,7 @@ done
 for s in intake-check.sh owner-override.sh run-review.sh post-review.sh policy-check.sh set-status.sh security_scan.py audit-export.sh; do
   copy "$SELF/.github/asdd/$s" "$TARGET/.github/asdd/$s"
 done
-for r in generic.sh openai-compat.sh; do
+for r in generic.sh openai-compat.sh extract-json.py; do
   copy "$SELF/.github/asdd/runtime/$r" "$TARGET/.github/asdd/runtime/$r"
 done
 # The review lenses the runtime assembles (generic.sh runs code/security/spec/impact as the main pass and

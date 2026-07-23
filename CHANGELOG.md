@@ -15,6 +15,14 @@ draft, so pin a conformance claim to a commit or date.
   recovers the review object and still fails closed on genuine non-JSON, and the adapter logs a key-safe
   redacted diagnostic on a persistent failure. Spec:
   [review-json-recovery.md](docs/specs/review-json-recovery.md).
+- **Intake lane and spec-path gates ignore inline comments.** A documented config, `- chore  # trivial`,
+  left the trailing comment on the token, so no lane label ever matched (intake failed for every PR) and a
+  commented `spec_paths` glob matched nothing. The readers now strip an inline comment before the token.
+- **`asdd init --goose` copies the review runtime's JSON extractor.** `openai-compat.sh` shells to
+  `extract-json.py`, but the runtime copy loop omitted it, so a fresh adopter fell back to the weaker
+  extraction and a reasoning model's review could fail. It now travels with the runtime.
+- **`connect-check` pings with a real token budget.** A one-token ping made some reasoning models return
+  HTTP 500, false-failing a reachable model; the ping now uses a small but sufficient budget.
 
 ## [0.1.0] - 2026-07-22
 

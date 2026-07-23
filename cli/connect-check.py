@@ -81,8 +81,10 @@ def ping(model, url, token, timeout=30):
     endpoint = url.rstrip("/")
     if not endpoint.endswith("/chat/completions"):
         endpoint += "/chat/completions"
+    # max_tokens 64 (not 1): a 1-token cap makes some reasoning models 500 on the ping even though they
+    # answer fine with a real budget, which would false-fail a reachable model. 64 is small but enough.
     body = json.dumps({"model": model, "messages": [{"role": "user", "content": "ping"}],
-                       "max_tokens": 1}).encode("utf-8")
+                       "max_tokens": 64}).encode("utf-8")
     req = urllib.request.Request(endpoint, data=body, headers={
         "Authorization": "Bearer " + token, "Content-Type": "application/json"})
     try:
