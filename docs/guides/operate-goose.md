@@ -80,6 +80,20 @@ correctly. For Runware specifically, set `supports_streaming: false` on the prov
 [Troubleshooting](troubleshooting.md)). Both traps have troubleshooting entries if you hit them on a
 different provider.
 
+Every role that goes through the OpenAI-compatible adapter has a second requirement: it needs **strict
+JSON output**, not just tool tolerance. That is the **reviewer and the model lenses**, and also the
+**operator-run fixed-prompt agents** that share the same adapter through `run-agent.sh` (triage, support,
+review-contributor, review-merge). A reasoning model wraps its answer in analysis prose or emits it in a
+separate `reasoning_content` field; the adapter now recovers the JSON object from either
+([robust extraction](../../.github/asdd/runtime/extract-json.py)), so GLM-5.2 works for these roles. But a
+model that reliably returns a clean JSON object is the more predictable choice for them; a reasoning model
+shines as the free-form **developer** or a **developer-council** member, where prose is the point. (The
+Goose-run operate agents - documentation, test-author, test-runner, interaction - take a different path:
+Goose parses the model itself and the agent writes its result file, so they do not depend on this
+extraction.) If a live call keeps failing closed to "human should review manually", the adapter logs a
+redacted diagnostic naming the cause, and [Troubleshooting](troubleshooting.md) covers switching the role
+to a JSON-reliable model.
+
 **Or let an agent walk you through it.** The setup recipe reads [`asdd-kit.yml`](../../asdd-kit.yml) -
 the kit map: every role, its recipe, its model key, where it runs, and the invariants - so it starts
 oriented instead of reading the kit to work it out. It tells you what is configured, what is missing,
