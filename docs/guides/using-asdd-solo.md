@@ -26,10 +26,18 @@ Give your agents a GitHub identity that is **not you**. Then a PR belongs to the
 merge it as the code owner. This is the intended ASDD flow, and it is what makes the human-approval gate
 satisfiable for a solo maintainer.
 
-### Recommended: a GitHub App
+### Lowest friction for a solo maintainer: a bot account
 
-A GitHub App is a scoped, revocable identity, which fits ASDD's security posture better than sharing a
-password-backed account.
+Create a separate GitHub account (a machine user), add it to your repo as a collaborator with write access,
+and give it a **fine-grained personal access token** scoped to that repo (Contents, Pull requests, Issues
+read and write). The token is long-lived, so there is no minting step: point your agents at it, and PRs are
+authored by the bot while you approve them. This is the recommended solo setup because it is the least
+moving parts: no private key, no hourly token, nothing to rotate.
+
+### Scoped and revocable: a GitHub App
+
+A GitHub App is the least-privilege, revocable option, which suits a team or a security-conscious setup. It
+is more machinery than a bot account, so reach for it when that trade is worth it.
 
 1. **Create it under your org**, not your personal account, or it cannot install on your org's repos:
    `https://github.com/organizations/<ORG>/settings/apps/new`.
@@ -41,17 +49,22 @@ password-backed account.
 4. Choose **"Only on this account"** and create it.
 5. **Install it** (a separate step after creation): the app's Install App tab, install on your org, and
    select the repo.
-6. Generate a **private key** on the app's page. Your agent runtime signs a short-lived token from it (the
-   App ID plus the private key mint an installation token via the GitHub API). App tokens expire hourly, so
-   the runtime mints a fresh one each run; keep the private key where the runtime can read it.
+6. Generate a **private key** on the app's page. Your agent runtime signs a short-lived installation token
+   from it (App ID plus the private key) via the GitHub API; app tokens expire hourly, so the runtime mints
+   a fresh one each run and keeps the private key where it can read it. That per-run minting is the friction
+   the bot account avoids.
 
-### Simpler: a bot account
+### Where the token lives
 
-If the App's key-and-token handling is more than you want, create a separate GitHub account (a machine
-user), add it to the repo as a collaborator with write access, and give it a fine-grained personal access
-token scoped to the repo (Contents, Pull requests, Issues read and write). The token is long-lived, so
-there is no minting step. Point your agents at that token. Same result: PRs are authored by the bot, and
-you approve them.
+Put the token where the agent that opens the PR actually reads it, which depends on where that agent runs:
+
+- **Produce-loop agents run on your host** (your developer, and the developer council). They call the GitHub
+  API from your machine, so the identity token is a **host environment variable** the agent reads before it
+  opens a PR.
+- **CI agents run in Actions** (the review and post-merge agents). For anything they open, the token is a
+  **repository secret**.
+
+A solo setup usually needs the host one first, because that is where the produce loop runs.
 
 Either way, the rule is: **the identity that opens the PR must not be the identity that approves it.** Your
 own token can still push the branch; it is the identity that opens the pull request that has to differ.
