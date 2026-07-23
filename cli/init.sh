@@ -206,7 +206,7 @@ if [ "$GOOSE" -eq 1 ]; then
   # (not gated on spec_tool) so a repo that flips to spec_tool: openspec after init already has the gate.
   # conventions-check.py travels for the same reason: the MCP `conventions_check` tool shells to it, and
   # the operate recipes call that tool to learn the HOST project's workflow before producing anything.
-  for g in spec-check.py claim-check.py merge-eligibility.py openspec-gate.py _openspec_locate.py conventions-check.py audit.py operate-run.py asdd-mcp.py operate-guard.py run-agent.sh; do
+  for g in spec-check.py claim-check.py merge-eligibility.py openspec-gate.py _openspec_locate.py conventions-check.py audit.py operate-run.py asdd-mcp.py operate-guard.py run-agent.sh dev-council.py connect-check.py; do
     copy "$SELF/cli/$g" "$TARGET/cli/$g"
   done
   copy "$SELF/validation/audit-check.py" "$TARGET/validation/audit-check.py"
@@ -223,7 +223,13 @@ if [ "$GOOSE" -eq 1 ]; then
   copy "$SELF/cli/templates/operate/docsync.sh" "$TARGET/.github/asdd/operate/docsync.sh"
   copy "$SELF/cli/templates/operate/asdd-test.yml" "$TARGET/.github/workflows/asdd-test.yml"
   copy "$SELF/cli/templates/operate/test.sh" "$TARGET/.github/asdd/operate/test.sh"
+  # The optional developer council (cli/dev-council.py, copied above): the operator runs it on demand to
+  # implement an OpenSpec change with 2 to 5 diverse models. Its runner ships alongside the other operate
+  # runners so an adopter invokes it with no extra plumbing.
+  copy "$SELF/cli/templates/operate/dev-council.sh" "$TARGET/.github/asdd/operate/dev-council.sh"
   say "the developer is bring-your-own; the deployment runs test-author / test-runner / documentation / interaction (spec-driven OP)."
+  say "optional: the developer council (asdd dev-council --change ID, or .github/asdd/operate/dev-council.sh) implements a change with 2-5 diverse models; opt in by setting dev_council.models in .asdd.yml."
+  say "give your agents their OWN GitHub identity (a bot account + token, or a GitHub App) so they open PRs you approve; you cannot approve your own PRs, so the merge gate is unsatisfiable if agents open them as you. See docs/guides/using-asdd-solo.md."
   say "guided setup:  goose run --recipe recipes/setup.yaml --model <your model>   (it reads asdd-kit.yml, the map)"
   say "the docsync + test workflows run the documentation and test agents post-merge (trusted); both dry-run until a model is wired."
   cat <<'GOOSE'

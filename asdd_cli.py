@@ -58,11 +58,13 @@ COMMANDS = {
     "setup":             ["python3", os.path.join(CLI, "setup-goose.py")],
     "setup-dashboard":   ["python3", os.path.join(CLI, "setup-dashboard.py")],
     "doctor":            ["python3", os.path.join(CLI, "doctor.py")],
+    "connect-check":     ["python3", os.path.join(CLI, "connect-check.py")],
     "dashboard":         ["python3", os.path.join(CLI, "dashboard.py")],
     "recipe-lint":       ["python3", os.path.join(CLI, "recipe-lint.py")],
     "kit-check":         ["python3", os.path.join(CLI, "kit-check.py")],
     "audit":             ["python3", os.path.join(CLI, "audit.py")],
     "operate-run":       ["python3", os.path.join(CLI, "operate-run.py")],
+    "dev-council":       ["python3", os.path.join(CLI, "dev-council.py")],
     "audit-ship":        ["bash",    os.path.join(ROOT, ".github", "asdd", "audit-export.sh")],
     "audit-check":       ["python3", os.path.join(VAL, "audit-check.py")],
     "mcp":               ["python3", os.path.join(CLI, "asdd-mcp.py")],
@@ -78,6 +80,7 @@ Commands:
   setup                     guided per-role model wiring for Goose (writes .asdd.yml)
   setup-dashboard           the same, as a local web page (non-engineer front door)
   doctor [CONFIG]           preflight the operate path (tools reachable, spec CLI, roster)
+  connect-check [CONFIG]    is each agent's model connected, or dry-running? (pings per role)
   dashboard --repo O/R      the read-only governance + insights view (internal unless --public)
   spec-check FILE           definition-of-ready gate on a spec object (built-in spec tool)
   openspec-gate CHANGE      readiness gate for an OpenSpec project (delegates to `openspec validate`)
@@ -90,6 +93,7 @@ Commands:
   kit-check [CONFIG]         keep asdd-kit.yml (the kit map) matching reality
   audit SUB ...              the agent audit ledger: append / verify / trail / corpus / knowledge
   operate-run --role R ...   run a Goose operate agent and record it deterministically
+  dev-council --change ID    optional produce-loop developer: 2-5 models propose/critique/synthesise/verify
   audit-ship LEDGER          push a local ledger to the configured private sink (e.g. .asdd-work/audit.jsonl)
   audit-check TRAIL ...      audit-log properties P1-P9
   mcp                        run the gates as an MCP server (Goose stdio extension)

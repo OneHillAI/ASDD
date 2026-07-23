@@ -390,6 +390,11 @@ def to_corpus(rec):
 _KNOWLEDGE_KIND = {
     "review": "invariant", "impact": "invariant", "security": "invariant",
     "spec": "rejected", "test-author": "exemplar",
+    # Developer council (cli/dev-council.py): a proposal the council set aside is a "rejected" approach a
+    # later run can learn to avoid; the synthesised, verified result is an "exemplar" to learn from. These
+    # arrive on the record's `lens`, so only the council's curated learnings (not every developer action)
+    # enter the knowledge base.
+    "council-rejected": "rejected", "council-synthesis": "exemplar",
 }
 
 

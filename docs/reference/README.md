@@ -35,5 +35,5 @@ The role definitions the operate layer runs. See [agents/](https://github.com/On
 
 - [cli/README.md](https://github.com/OneHillAI/ASDD/blob/main/cli/README.md): the `asdd` unified CLI and every deterministic gate
   (`spec-check`, `openspec-gate`, `claim-check`, `merge-eligibility`, `check-models`, `audit` (append /
-  verify / tip / graft / trail / corpus / knowledge as OKGF pages), `audit-ship`, `operate-run`, `run-agent`, `audit-check`, `conventions-check`, `doctor`, `workflow-lint`,
+  verify / tip / graft / trail / corpus / knowledge as OKGF pages), `audit-ship`, `operate-run`, `run-agent`, `dev-council`, `audit-check`, `conventions-check`, `doctor`, `workflow-lint`,
   `asdd-mcp`).
