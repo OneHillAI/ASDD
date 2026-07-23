@@ -53,5 +53,16 @@ single-model developer stays the default. Runtime-neutral, so it works in every 
   audit ledger, so `corpus` and `knowledge` derive from it. No untrusted-input path: the council runs in the
   operator's own produce session, so its inputs are trusted.
 - With no model wired, the orchestrator prints a labelled dry run (the prompts still assemble correctly).
-- Delivered in both operator kits: a runnable reference in the Goose kit, and the contract documented for a
-  bring-your-own runtime (`agents/runtime.md`, `docs/guides/operate-other.md`).
+
+### Delivered in every operator kit (an explicit deliverable, not an implication)
+
+- **The orchestrator ships.** `asdd dev-council` is a runtime-neutral reference over any OpenAI-compatible
+  endpoint (a sibling to `run-agent`), with its own self-test in the base validation suite.
+- **The Goose kit wires it.** The kit ships a concrete way to invoke the council (a recipe or runner) that
+  `init --goose` copies, so an adopter runs it with no extra plumbing. `init` completeness is asserted (the
+  orchestrator and its Goose wiring actually land at an adopter), the same guard the other agents have.
+- **The bring-your-own runtime has the contract.** `agents/runtime.md` documents the council loop (roles,
+  the propose to cross-critique to synthesize to verify sequence, the recording obligation) so a custom
+  operator implements it conformantly, and `docs/guides/operate-other.md` points to it.
+- **Docs surface it on every reference surface** it touches (`cli/README.md`, the operate guide, the
+  reference index), so the council is discoverable, not only present.
