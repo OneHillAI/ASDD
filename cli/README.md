@@ -148,6 +148,22 @@ alongside the gates because they depend on it.
 > key, in their own keyring, **never in the repo**. The **governance agents** run on the admin's key,
 > held as repo secrets. Different people, different keys, by construction.
 
+## connect-check
+
+`asdd connect-check [CONFIG]` answers one question a fresh deployment must not get wrong: **is each agent's
+model actually connected, or dry-running?** Every ASDD agent (the review lenses, test-author, test-runner,
+documentation, interaction, the developer council) dry-runs until its model runtime is connected, so a
+deployment can look set up while no agent does real work: a pull request's review comes back a placeholder,
+not a real review the human can judge. For each role it resolves the model, endpoint and key the gates use
+and sends one tiny request, reporting **LIVE** or **NOT CONNECTED** per role, with a summary. It exits
+non-zero if any configured role is not connected, so `asdd setup` runs it at the end and CI can gate on it.
+Use `--no-ping` for a network-free config-completeness check.
+
+```bash
+asdd connect-check              # ping every role (+ the council if configured)
+asdd connect-check --no-ping    # "is the runtime configured?" without a model call
+```
+
 ## kit-check
 
 `kit-check.py` keeps [`asdd-kit.yml`](../asdd-kit.yml) - **the kit map** - honest. The map is what an

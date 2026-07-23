@@ -382,6 +382,16 @@ def main():
             print(f"  {line}")
         if code != 0:
             rc = 1
+        # The unmissable step: a roster names the models, but every agent DRY-RUNS until a model runtime
+        # is connected. A deployment can look set up while no agent does real work (a review comes back a
+        # placeholder, not a real review). Surface the connection status here, at the end of setup.
+        cc = subprocess.run(["python3", os.path.join(HERE, "connect-check.py"), config, "--no-ping"],
+                            capture_output=True, text=True)
+        print("\n" + cc.stdout.strip())
+        if cc.returncode != 0:
+            print("\nNext: connect a model runtime so the agents run live, then verify with `asdd "
+                  "connect-check`:\n  ASDD_MODEL_URL (variable) = your provider's .../v1/chat/completions"
+                  "\n  ASDD_RUNTIME_TOKEN (secret) = your API key   (or the per-role / __COUNCIL_<i> variants)")
     return rc
 
 

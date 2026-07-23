@@ -58,6 +58,7 @@ COMMANDS = {
     "setup":             ["python3", os.path.join(CLI, "setup-goose.py")],
     "setup-dashboard":   ["python3", os.path.join(CLI, "setup-dashboard.py")],
     "doctor":            ["python3", os.path.join(CLI, "doctor.py")],
+    "connect-check":     ["python3", os.path.join(CLI, "connect-check.py")],
     "dashboard":         ["python3", os.path.join(CLI, "dashboard.py")],
     "recipe-lint":       ["python3", os.path.join(CLI, "recipe-lint.py")],
     "kit-check":         ["python3", os.path.join(CLI, "kit-check.py")],
@@ -79,6 +80,7 @@ Commands:
   setup                     guided per-role model wiring for Goose (writes .asdd.yml)
   setup-dashboard           the same, as a local web page (non-engineer front door)
   doctor [CONFIG]           preflight the operate path (tools reachable, spec CLI, roster)
+  connect-check [CONFIG]    is each agent's model connected, or dry-running? (pings per role)
   dashboard --repo O/R      the read-only governance + insights view (internal unless --public)
   spec-check FILE           definition-of-ready gate on a spec object (built-in spec tool)
   openspec-gate CHANGE      readiness gate for an OpenSpec project (delegates to `openspec validate`)

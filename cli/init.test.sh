@@ -31,7 +31,7 @@ if bash "$ROOT/cli/init.sh" --goose "$G" >/dev/null 2>&1; then
   # so the pair must travel with asdd-mcp.py or an openspec adopter's MCP has no file to call. Same for
   # conventions-check.py, which the MCP `conventions_check` tool shells to so the operate recipes can
   # read the host project's workflow before producing anything.
-  for g in spec-check.py claim-check.py merge-eligibility.py openspec-gate.py _openspec_locate.py conventions-check.py audit.py asdd-mcp.py operate-guard.py run-agent.sh dev-council.py; do
+  for g in spec-check.py claim-check.py merge-eligibility.py openspec-gate.py _openspec_locate.py conventions-check.py audit.py asdd-mcp.py operate-guard.py run-agent.sh dev-council.py connect-check.py; do
     [ -f "$G/cli/$g" ] || { echo "FAIL: --goose did not copy cli/$g"; fail=1; }
   done
 

@@ -206,7 +206,7 @@ if [ "$GOOSE" -eq 1 ]; then
   # (not gated on spec_tool) so a repo that flips to spec_tool: openspec after init already has the gate.
   # conventions-check.py travels for the same reason: the MCP `conventions_check` tool shells to it, and
   # the operate recipes call that tool to learn the HOST project's workflow before producing anything.
-  for g in spec-check.py claim-check.py merge-eligibility.py openspec-gate.py _openspec_locate.py conventions-check.py audit.py operate-run.py asdd-mcp.py operate-guard.py run-agent.sh dev-council.py; do
+  for g in spec-check.py claim-check.py merge-eligibility.py openspec-gate.py _openspec_locate.py conventions-check.py audit.py operate-run.py asdd-mcp.py operate-guard.py run-agent.sh dev-council.py connect-check.py; do
     copy "$SELF/cli/$g" "$TARGET/cli/$g"
   done
   copy "$SELF/validation/audit-check.py" "$TARGET/validation/audit-check.py"

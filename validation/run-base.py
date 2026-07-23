@@ -38,6 +38,9 @@ CHECKS = [
     ("developer council orchestrator",          ["bash", "cli/dev-council.test.sh"],
      "zero", "the optional multi-model developer: sizing (2 to 5), heterogeneity (developer != testers), "
              "dry-run, one record per run, and the council's learnings deriving exemplar/rejected OKGF pages"),
+    ("connect-check: agents connected or dry",  ["bash", "cli/connect-check.test.sh"],
+     "zero", "every agent dry-runs until its model runtime is connected; connect-check reports LIVE or NOT "
+             "CONNECTED per role so a fresh setup cannot silently do no real work"),
     ("audit ledger: record, corpus, knowledge", ["bash", "cli/audit.test.sh"],
      "zero", "every role records (developer included), the chain detects tamper, and the training and "
              "knowledge views read the trail without leaking chain plumbing or reviewed content"),

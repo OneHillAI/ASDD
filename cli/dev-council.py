@@ -454,9 +454,11 @@ def verify(root, cfg_all, criteria, implementation, test_cmd, max_tokens, transc
         tests = call_model(ta, TESTAUTHOR_SYS,
                            f"Acceptance criteria:\n{criteria}\n\nImplementation:\n{implementation}", max_tokens)
     transcript["verify"] = {"tests_from": ta["model"]}
-    # A real run wins over a model judgement when the operator wired one.
+    # A real run wins over a model judgement when the operator wired one. test_cmd is the OPERATOR'S OWN
+    # command, passed on their command line in their own produce session, never untrusted PR input, so a
+    # shell is the intended interface (they may write `pytest && ...`). Not an injection surface.
     if test_cmd:
-        r = subprocess.run(test_cmd, shell=True, cwd=root, capture_output=True, text=True)
+        r = subprocess.run(test_cmd, shell=True, cwd=root, capture_output=True, text=True)  # nosec B602
         return {"pass": r.returncode == 0, "reasoning": f"ran `{test_cmd}` -> exit {r.returncode}",
                 "tests_from": ta["model"]}
     if not (tr["url"] and tr["token"] and tr["model"]):

@@ -50,6 +50,17 @@ model. The recipes are **provider-neutral**; you set the model per run. For a fr
 ollama pull qwen3:8b
 ```
 
+**Then connect the runtime, and verify it.** Naming the models in the roster is not the same as connecting
+them: every agent DRY-RUNS (a review comes back a placeholder, not a real review) until a model runtime is
+reachable. `asdd setup` runs the check at the end, and you can re-run it any time:
+
+```bash
+asdd connect-check      # LIVE or NOT CONNECTED, per role. Non-zero until every configured agent is live.
+```
+
+Connect a runtime by setting `ASDD_MODEL_URL` (variable) + `ASDD_RUNTIME_TOKEN` (secret), or the per-role /
+`__COUNCIL_<i>` variants, then re-run `asdd connect-check` until it is green.
+
 Then assign a model to each agent role. Do not hand-edit `.asdd.yml` blind - the wizard prompts for each
 role, keeps the developer distinct from the test models (the one hard rule), and prints the run commands
 and CI secrets for the models you picked:
