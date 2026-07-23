@@ -1,19 +1,58 @@
+/* OneHill brand alignment for the ASDD docs - matches onehill.org.
+   Hero gradient, headings, links, cards all read from these variables. */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;600;700&display=swap');
+
 :root {
-  --ifm-color-primary: #b45309;
-  --ifm-color-primary-dark: #a14a08;
-  --ifm-color-primary-darker: #984608;
-  --ifm-color-primary-darkest: #7d3a06;
-  --ifm-color-primary-light: #c75d0a;
-  --ifm-color-primary-lighter: #d0610a;
-  --ifm-color-primary-lightest: #e07a1f;
+  /* Accent - onehill gold-brown (--accent #6E5D49) */
+  --ifm-color-primary: #6e5d49;
+  --ifm-color-primary-dark: #635340;
+  --ifm-color-primary-darker: #5d4e3c;
+  --ifm-color-primary-darkest: #4d4031;
+  --ifm-color-primary-light: #7c6a54;
+  --ifm-color-primary-lighter: #877360;
+  --ifm-color-primary-lightest: #b19878;
+
+  /* Grounds + type - cream / espresso */
+  --ifm-background-color: #f4ede1;
+  --ifm-background-surface-color: #fbf7f0;
+  --ifm-font-color-base: #2a211a;
+  --ifm-heading-color: #2a211a;
+  --ifm-code-background: #efe7da;
   --ifm-code-font-size: 92%;
+
+  /* Fonts - Roboto Slab headings, neutral grotesque body */
+  --ifm-font-family-base: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --ifm-heading-font-family: 'Roboto Slab', 'Rockwell', Georgia, serif;
+
+  /* Dark espresso navbar + footer (like the onehill.org header) */
+  --ifm-navbar-background-color: #2d2317;
+  --ifm-navbar-link-color: rgba(252, 250, 246, 0.9);
+  --ifm-navbar-link-hover-color: #c99a5b;
+  --ifm-footer-background-color: #2d2317;
+  --ifm-footer-color: rgba(252, 250, 246, 0.72);
+  --ifm-footer-link-color: rgba(252, 250, 246, 0.9);
+  --ifm-footer-title-color: #fcfaf6;
 }
+
 [data-theme='dark'] {
-  --ifm-color-primary: #f59e0b;
-  --ifm-color-primary-dark: #e08e07;
-  --ifm-color-primary-darker: #d48607;
-  --ifm-color-primary-darkest: #ae6e05;
-  --ifm-color-primary-light: #f7ab2b;
-  --ifm-color-primary-lighter: #f8b23a;
-  --ifm-color-primary-lightest: #fac36a;
+  /* Accent - brighter gold on dark (--gold #C99A5B) */
+  --ifm-color-primary: #c99a5b;
+  --ifm-color-primary-dark: #c18f47;
+  --ifm-color-primary-darker: #b6873f;
+  --ifm-color-primary-darkest: #966f34;
+  --ifm-color-primary-light: #d0a56d;
+  --ifm-color-primary-lighter: #d5ac79;
+  --ifm-color-primary-lightest: #e1c194;
+
+  --ifm-background-color: #241b12;
+  --ifm-background-surface-color: #2d2317;
+  --ifm-font-color-base: #fcfaf6;
+  --ifm-heading-color: #fcfaf6;
+  --ifm-code-background: #2a2016;
 }
+
+.navbar__title, .navbar__brand { color: var(--ifm-navbar-link-color); }
+
+/* CTA buttons in the onehill gold */
+.button--primary { --ifm-button-background-color:#c99a5b; --ifm-button-border-color:#c99a5b; color:#2a211a; }
+.button--primary:hover { --ifm-button-background-color:#b5883f; --ifm-button-border-color:#b5883f; color:#2a211a; }

@@ -26,6 +26,7 @@ Drop ASDD into any GitHub repo. It handles the parts that break when AI writes r
 - [Get started](#get-started)
 - [Bring your own assistant, and your own spec tool](#bring-your-own-assistant-and-your-own-spec-tool)
 - [Running the operate layer with Goose](#running-the-operate-layer-with-goose)
+- [Own the record: governance, training, and knowledge](#own-the-record-governance-training-and-knowledge)
 - [Lanes and the PR template](#lanes-and-the-pr-template)
 - [Conformance](#conformance)
 - [Optional profiles: Assure and spec-driven](#optional-profiles-assure-and-spec-driven)
@@ -117,6 +118,16 @@ With the kit already scaffolded (from `asdd init --goose`), configure and run:
 3. Run the loop: a contributor builds a change and opens a PR; the test agents and the CI gates check it; a human merges. The interaction agent brings ideas in from the public as validated specs.
 
 The [Goose quickstart](docs/guides/operate-goose.md) walks it end to end, including a free, no-keys "prove it runs" check.
+
+## Own the record: governance, training, and knowledge
+
+Every agent action is recorded to an append-only, hash-chained ledger: who did what, to what, under whose authority, when, why, and what it caused. It lives in a private sink you own. ASDD hosts nothing and no data leaves your control by default. That trail is not only governance evidence; it is one event stream with three views:
+
+- **Governance.** The tamper-evident record behind STANDARD 1.3, reviewable in the dashboard.
+- **Training and tuning** (`asdd audit corpus`). A clean JSONL of your project's own decisions, so you can fine-tune a model on how your team actually builds. Content-safe by construction: counts and categoricals, never reviewed code or a finding's paths.
+- **Knowledge** (`asdd audit knowledge`). Durable learnings, a review invariant, a rejected approach, an exemplar, emitted as OKGF pages a knowledge store ingests, so later runs reuse what the system already learned instead of rediscovering it.
+
+The longer it runs, the more it is worth: governance evidence, a training corpus, and a knowledge base, all accumulating in infrastructure you own. See [docs/guides/audit-ledger.md](docs/guides/audit-ledger.md) and [docs/guides/okgf-integration.md](docs/guides/okgf-integration.md).
 
 ## Lanes and the PR template
 
