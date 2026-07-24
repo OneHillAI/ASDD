@@ -23,6 +23,10 @@ draft, so pin a conformance claim to a commit or date.
   extraction and a reasoning model's review could fail. It now travels with the runtime.
 - **`connect-check` pings with a real token budget.** A one-token ping made some reasoning models return
   HTTP 500, false-failing a reachable model; the ping now uses a small but sufficient budget.
+- **Model calls fall back to `max_completion_tokens`.** A newer OpenAI reasoning model rejects `max_tokens`
+  with a 400 asking for `max_completion_tokens`, so `connect-check` reported it dead and the developer
+  council could not call it. Both now send `max_tokens` first and retry once with the renamed parameter on
+  that specific 400; every other model is unaffected.
 
 ## [0.1.0] - 2026-07-22
 

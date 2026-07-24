@@ -183,13 +183,16 @@ def call_model(member, system, user, max_tokens, retries=2, timeout=180):
     endpoint = member["url"].rstrip("/")
     if not endpoint.endswith("/chat/completions"):
         endpoint += "/chat/completions"
-    body = json.dumps({
-        "model": member["model"],
-        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-        "max_tokens": max_tokens,
-    }).encode("utf-8")
+    # A newer OpenAI reasoning model rejects max_tokens with a 400 naming max_completion_tokens; every
+    # other model keeps working on max_tokens. Start on max_tokens and switch the parameter on that 400.
+    tok_param = "max_tokens"
     last = ""
     for attempt in range(max(1, retries + 1)):
+        body = json.dumps({
+            "model": member["model"],
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+            tok_param: max_tokens,
+        }).encode("utf-8")
         req = urllib.request.Request(endpoint, data=body, headers={
             "Authorization": "Bearer " + member["token"],
             "Content-Type": "application/json",
@@ -204,6 +207,15 @@ def call_model(member, system, user, max_tokens, retries=2, timeout=180):
             last = "empty content"
         except urllib.error.HTTPError as e:
             last = f"HTTP {e.code}"
+            if e.code == 400 and tok_param == "max_tokens":
+                detail = ""
+                try:
+                    detail = e.read().decode("utf-8", "replace")
+                except Exception:
+                    pass
+                if "max_completion_tokens" in detail:
+                    tok_param = "max_completion_tokens"  # retry the same call with the renamed parameter
+                    continue
         except Exception as e:
             last = type(e).__name__
     return ""  # a member that cannot answer drops out (graceful degradation)
