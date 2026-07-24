@@ -69,6 +69,12 @@ fi
 # enormous PR drains the budget. Above the cap we refuse the model and say so, rather than pay.
 # The deterministic security layer below still runs, so the gate keeps biting either way.
 CAP="$(yaml_scalar_in max_diff_lines)"; CAP="${CAP:-2000}"
+# Per-call model timeout (seconds). review.timeout_seconds in .asdd.yml maps to ASDD_MODEL_TIMEOUT, which
+# the OpenAI-compatible adapter enforces, so a slow reasoning reviewer fails fast with a named cause
+# instead of hanging. Unset here leaves the adapter default. A caller's env ASDD_MODEL_TIMEOUT still wins.
+if [ -z "${ASDD_MODEL_TIMEOUT:-}" ]; then
+  _to="$(yaml_scalar_in timeout_seconds)"; [ -n "$_to" ] && export ASDD_MODEL_TIMEOUT="$_to"
+fi
 DIFF_LINES=$(wc -l < "$WORKDIR/changes.diff" 2>/dev/null | tr -d ' '); DIFF_LINES="${DIFF_LINES:-0}"
 too_big=false
 if [ "$CAP" -gt 0 ] 2>/dev/null && [ "$DIFF_LINES" -gt "$CAP" ]; then too_big=true; fi

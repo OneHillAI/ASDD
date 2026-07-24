@@ -83,13 +83,22 @@ case "$attempts" in ''|*[!0-9]*) attempts=3 ;; esac
 [ "$attempts" -ge 1 ] || attempts=1
 nap="${ASDD_MODEL_RETRY_SLEEP:-1}"
 
-result=""; with_rf=1
+# Per-call timeout. Default 45s: above a fast reviewer's full-review time (~24s measured) and below a heavy
+# reasoning model's server-side hang (a reasoning reviewer times out around 60s on a real diff), so a slow
+# reasoning reviewer fails fast with a named cause instead of burning the full server timeout on every
+# retry. Configurable via ASDD_MODEL_TIMEOUT (run-review.sh maps review.timeout_seconds to it); re-tune per
+# provider.
+timeout_s="${ASDD_MODEL_TIMEOUT:-45}"
+case "$timeout_s" in ''|*[!0-9]*) timeout_s=45 ;; esac
+
+result=""; with_rf=1; timed_out=0
 for i in $(seq 1 "$attempts"); do
-  http=""
-  resp="$(curl -sS --max-time 180 -w '\n%{http_code}' -X POST "$endpoint" \
+  http=""; curl_rc=0
+  resp="$(curl -sS --max-time "$timeout_s" -w '\n%{http_code}' -X POST "$endpoint" \
     -H "Authorization: Bearer $ASDD_RUNTIME_TOKEN" \
     -H "Content-Type: application/json" \
-    -d "$(build_payload "$with_rf")" || true)"
+    -d "$(build_payload "$with_rf")")" || curl_rc=$?
+  [ "$curl_rc" = 28 ] && timed_out=1              # 28 = curl's own timeout exit code
   http="${resp##*$'\n'}"; resp="${resp%$'\n'*}"   # split the trailing status line off the body
   # Pull the answer across the shapes providers actually use: content as a string, content as an array of
   # parts (concatenate .text), or a legacy .text field; THEN append message.reasoning_content. A reasoning
@@ -137,6 +146,7 @@ if [ -z "$result" ]; then
     # PR content, so a truncated echo is key-safe and turns a blind failure into a named one.
     [ "$clen" -eq 0 ] && echo "  response body (truncated): $(printf '%s' "$resp" | tr '\n' ' ' | cut -c1-240)"
     [ "$clen" -eq 0 ] && echo "  (content was empty across message.content, content parts, .text, and reasoning_content: check the endpoint returns OpenAI-shaped choices, the model name, and quota.)"
+    [ "$timed_out" = 1 ] && echo "  the model did not respond within ${timeout_s}s; a heavy reasoning model can be too slow to review a real diff (see 'asdd doctor'). Use a faster reviewer, or raise ASDD_MODEL_TIMEOUT / review.timeout_seconds if the model is legitimately slow."
   } >&2
 fi
 printf '%s' "$result"
