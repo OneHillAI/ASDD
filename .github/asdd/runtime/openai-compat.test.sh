@@ -26,6 +26,11 @@ case "${MODE:-url}" in
   flaky)  # garbage on the first call, a valid object afterwards (proves retry)
           n=$(cat "$COUNTER" 2>/dev/null || echo 0); n=$((n+1)); echo "$n" > "$COUNTER"
           if [ "$n" -le 1 ]; then envelope 'nope'; else envelope '{"schema":"asdd/review/v0.1","lenses":[]}'; fi ;;
+  rf)     # a provider that rejects response_format: the call carrying it yields no usable content, the
+          # retry without it succeeds (proves the response_format fallback)
+          has_rf=0; for a in "$@"; do case "$a" in *response_format*) has_rf=1;; esac; done
+          if [ "$has_rf" = 1 ]; then printf '%s\n500' "$(envelope 'provider rejected response_format')"
+          else printf '%s\n200' "$(envelope '{"schema":"asdd/review/v0.1","lenses":[]}')"; fi ;;
 esac
 EOF
 chmod +x "$STUB/curl"
@@ -67,5 +72,12 @@ unset COUNTER
 got="$(MODE=bad ASDD_MODEL_RETRIES=2 PATH="$STUB:$PATH" ASDD_RUNTIME_TOKEN=x ASDD_MODEL=m \
       ASDD_MODEL_RETRY_SLEEP=0 ASDD_MODEL_URL='https://x.test/v1/chat/completions' bash "$SCRIPT" </dev/null 2>/dev/null)"
 [ -z "$got" ] || fail "all-bad responses should yield empty output, got '$got'"
+
+# 6. response_format fallback: a provider that 500s on response_format still gets a review, because the
+#    retry drops the parameter and the prompt + extractor carry it.
+got="$(MODE=rf ASDD_MODEL_RETRIES=3 PATH="$STUB:$PATH" ASDD_RUNTIME_TOKEN=x ASDD_MODEL=m \
+      ASDD_MODEL_RETRY_SLEEP=0 ASDD_MODEL_URL='https://x.test/v1/chat/completions' bash "$SCRIPT" </dev/null 2>"$STUB/err")"
+[ "$(printf '%s' "$got" | jq -r .schema)" = "asdd/review/v0.1" ] || fail "response_format fallback did not recover a review (got '$got')"
+grep -q 'retrying without response_format' "$STUB/err" || fail "fallback did not drop response_format on the retry"
 
 echo "openai-compat.test.sh: PASS"

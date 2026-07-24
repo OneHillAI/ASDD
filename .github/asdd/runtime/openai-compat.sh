@@ -62,23 +62,34 @@ extract_json() {
   return 1
 }
 
-payload="$(jq -n --arg m "$ASDD_MODEL" --arg s "$sys" --arg p "$prompt" \
-  '{model:$m, temperature:0,
-    messages:[{role:"system", content:$s},{role:"user", content:$p}],
-    response_format:{type:"json_object"}}')"
+# Request body, with a chooseable response_format. Some OpenAI-compatible providers (seen with a GLM
+# reasoning model on Runware) reject response_format with a 5xx, which would kill the review even though
+# the system prompt already demands JSON only and the extractor tolerates prose. So the first attempt asks
+# for a json_object; if it fails, the remaining attempts drop response_format and lean on the prompt plus
+# the extractor. Every mainstream provider still gets response_format on the first, cheapest try.
+build_payload() {  # $1: 1 = with response_format, 0 = without
+  if [ "$1" = 1 ]; then
+    jq -n --arg m "$ASDD_MODEL" --arg s "$sys" --arg p "$prompt" \
+      '{model:$m, temperature:0, messages:[{role:"system",content:$s},{role:"user",content:$p}],
+        response_format:{type:"json_object"}}'
+  else
+    jq -n --arg m "$ASDD_MODEL" --arg s "$sys" --arg p "$prompt" \
+      '{model:$m, temperature:0, messages:[{role:"system",content:$s},{role:"user",content:$p}]}'
+  fi
+}
 
 attempts="${ASDD_MODEL_RETRIES:-3}"
 case "$attempts" in ''|*[!0-9]*) attempts=3 ;; esac
 [ "$attempts" -ge 1 ] || attempts=1
 nap="${ASDD_MODEL_RETRY_SLEEP:-1}"
 
-result=""
+result=""; with_rf=1
 for i in $(seq 1 "$attempts"); do
   http=""
   resp="$(curl -sS --max-time 180 -w '\n%{http_code}' -X POST "$endpoint" \
     -H "Authorization: Bearer $ASDD_RUNTIME_TOKEN" \
     -H "Content-Type: application/json" \
-    -d "$payload" || true)"
+    -d "$(build_payload "$with_rf")" || true)"
   http="${resp##*$'\n'}"; resp="${resp%$'\n'*}"   # split the trailing status line off the body
   # Pull the answer across the shapes providers actually use: content as a string, content as an array of
   # parts (concatenate .text), or a legacy .text field; THEN append message.reasoning_content. A reasoning
@@ -95,7 +106,13 @@ for i in $(seq 1 "$attempts"); do
   if cand="$(extract_json "$content")"; then
     result="$cand"; break
   fi
-  if [ "$i" -lt "$attempts" ]; then
+  # This attempt failed. If response_format was still on, drop it for the remaining attempts: a provider
+  # that rejects it (a 5xx or an error body) then gets a clean try the prompt and extractor can satisfy.
+  if [ "$with_rf" = 1 ]; then
+    with_rf=0
+    echo "openai-compat: attempt $i failed (HTTP ${http:-n/a}); retrying without response_format" >&2
+    sleep "$nap" 2>/dev/null || true
+  elif [ "$i" -lt "$attempts" ]; then
     echo "openai-compat: attempt $i returned unparseable output; retrying" >&2
     sleep "$nap" 2>/dev/null || true
   fi
@@ -115,6 +132,10 @@ if [ -z "$result" ]; then
     echo "  last HTTP status: ${http:-unknown}; response bytes: ${rlen}; extracted-content chars: ${clen}"
     echo "  content head: ${head_snip}"
     echo "  content tail: ${tail_snip}"
+    # The raw response body on an error names the cause (an unsupported parameter, a bad model name, a
+    # quota message). It holds no key (the key is only in the request header) and reviews already-public
+    # PR content, so a truncated echo is key-safe and turns a blind failure into a named one.
+    [ "$clen" -eq 0 ] && echo "  response body (truncated): $(printf '%s' "$resp" | tr '\n' ' ' | cut -c1-240)"
     [ "$clen" -eq 0 ] && echo "  (content was empty across message.content, content parts, .text, and reasoning_content: check the endpoint returns OpenAI-shaped choices, the model name, and quota.)"
   } >&2
 fi
