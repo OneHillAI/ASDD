@@ -48,5 +48,4 @@ the rendered comment.
 - The escaped-defect count links from a bug PR or issue, feeds Correctness, and is presented as the review
   false-negative rate.
 - A below-threshold metric shows a note rather than a number, and `--public` adds no new disclosure.
-- A worked HTML example ships at
-  [`openspec/changes/project-development-analytics/design/analytics-example.html`](../../openspec/changes/project-development-analytics/design/analytics-example.html).
+- A worked HTML example was produced as a design reference for the view.

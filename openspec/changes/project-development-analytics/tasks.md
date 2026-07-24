@@ -43,7 +43,7 @@
 - [ ] 5.3 KPI block + the escaped-defect hero (framed as the agent false-negative rate), each with total,
       percentage, failing count, and a trend indicator backed by the per-window series.
 - [ ] 5.4 Sparklines for the headline signals (escaped-defect rate, throughput, spec-fit); the "still filling
-      in" note for below-threshold metrics. The shipped `design/analytics-example.html` is the visual target.
+      in" note for below-threshold metrics, following the worked HTML design example.
 
 ## 6. Tests and docs
 - [ ] 6.1 Extend `cli/dashboard.test.sh`: both states populated and to-be empty; each dimension scored and

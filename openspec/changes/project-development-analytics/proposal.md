@@ -56,7 +56,7 @@ read-only view.
    are rising or falling, not only their latest value.
 
 A worked HTML example of the whole view (radar, KPIs, escaped-defect hero, sparklines, and the
-still-filling-in note) ships with this change under `design/analytics-example.html` as a design reference.
+still-filling-in note) was produced as a design reference for this change.
 
 ## What this depends on
 
