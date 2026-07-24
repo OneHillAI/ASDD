@@ -46,18 +46,44 @@ read-only view.
    attempted to change the core business logic of the code; and how many were flagged malicious.
 
 5. **Bug-free-software KPIs.** The headline performance numbers: submitted versus merged, and the
-   **escaped-defect count** - bugs reported against a PR that had passed review green and passed its tests
-   yet still shipped a defect. This is the number the whole gate exists to drive down.
+   **escaped-defect count** framed as the **review agent's false-negative rate** - a defect reported
+   against a PR that had passed review green and passed its tests yet still shipped. Green-then-buggy means
+   the review missed it, so for a project that runs the agent review this is the sharpest read of whether
+   the agent fleet is actually catching bugs. It is the number the whole gate exists to drive down.
+
+6. **A temporal trend.** The radar answers current-vs-to-be; alongside it, a per-window series (a small
+   trend line) for the headline signals, so an owner sees whether escaped defects, throughput, and spec-fit
+   are rising or falling, not only their latest value.
+
+A worked HTML example of the whole view (radar, KPIs, escaped-defect hero, sparklines, and the
+still-filling-in note) ships with this change under `design/analytics-example.html` as a design reference.
+
+## What this depends on
+
+Two of the KPIs cannot come from what the pipeline emits today, so this change carries the small producer
+changes they need:
+
+- **Spec conformance is its own signal.** Intake rolls the spec check together with disclosure, DCO, and
+  lane, and a chore lane is spec-exempt, so "passed intake" is not "spec-conformant." Intake must expose
+  the spec result separately.
+- **The review emits a machine-readable per-lens result.** Review categories, malicious flags, and
+  impact-core findings already exist inside the review, but only the rendered comment is queryable. A
+  structured per-lens emission (a status per lens, or a parseable block) unlocks all three at once, instead
+  of the dashboard scraping a comment. The MUST-invariant KPI stays "not enough signal" until a review
+  emits an explicit invariant check; the spec marks it blocked on that producer rather than implying it is
+  derivable.
 
 ## Impact
 
 - Affected specs: new capability `project-analytics`.
 - Affected code (at build time, not in this change): `cli/dashboard.py` (a new analytics model + render
-  section), its template/HTML, and `cli/dashboard.test.sh`. Reuses the existing `fetch`, `stage_of`,
-  `lane_of`, `parse_impact`, and `_normative_paths` helpers.
-- New declared conventions (config + PR trailers) for the signals GitHub does not carry: the project goal
-  and invariants, the escaped-defect link, and the malicious/core-change markers. All are optional; every
-  KPI degrades to "not enough signal" rather than a wrong number when its input is absent.
-- Privacy and provenance are unchanged from the dashboard's existing stance: every rendered fact is
-  already visible on GitHub, private deployments stay behind auth, and `--public` remains the explicit
-  opt-in for publication.
+  section, plus extending `fetch` to read merged-PR statuses and files and to paginate the declared
+  window), its HTML, and `cli/dashboard.test.sh`; `.github/asdd/intake-check.sh` (expose `spec_ok`
+  separately); the review path (`post-review.sh` or a per-lens status) for the machine-readable emission.
+- New declared conventions (config + trailers) for the signals GitHub does not carry: the project goal and
+  invariants, and the escaped-defect link (`Escaped-from: #N` on a bug-lane PR or a bug-labelled issue).
+  Every KPI degrades to "not enough signal" rather than a wrong number when its input is absent, and each
+  metric declares a minimum signal so a new project shows a note while an existing repo scores from history.
+- Privacy and provenance are unchanged from the dashboard's existing stance: every rendered fact is already
+  visible on GitHub, private deployments stay behind auth, and `--public` remains the explicit opt-in for
+  publication.
