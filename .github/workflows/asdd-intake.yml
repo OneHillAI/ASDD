@@ -64,7 +64,11 @@ jobs:
           # empty (and the DCO check see 0 commits). --depth covers the PR's commit range.
           git fetch --no-tags --depth=200 origin "+refs/pull/${PR_NUMBER}/head:refs/asdd-pr-head" "$BASE_SHA"
           HEAD_SHA="$(git rev-parse refs/asdd-pr-head)"
-          git log "$BASE_SHA".."$HEAD_SHA" --format='%B%x00' > .asdd-work/commits.txt
+          # --no-merges: DCO signs off authored changes, not merge commits. A merge commit carries no
+          # change of its own and cannot be signed without rewriting history, so counting it would make a
+          # routine "update this branch with main" (or the GitHub "Update branch" button) fail DCO with no
+          # clean fix. Excluding merges matches the DCO convention (the DCO app skips them too).
+          git log --no-merges "$BASE_SHA".."$HEAD_SHA" --format='%B%x00' > .asdd-work/commits.txt
           # Changed files (for the spec-gate: did the PR add/edit a spec?). Names only. Which paths ARE
           # specs comes from the base .asdd.yml's `spec_paths:`; intake-check.sh does that match.
           # --name-status (not --name-only): the spec gate must count an ADDED/MODIFIED spec, not a
