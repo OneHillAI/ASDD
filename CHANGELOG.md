@@ -6,6 +6,16 @@ draft, so pin a conformance claim to a commit or date.
 
 ## [Unreleased]
 
+### Added
+- **`doctor` and `setup` warn when the reviewer is a heavy reasoning model.** A reasoning model reasons at
+  length and can exceed a hosted inference window on a real code diff, so the review times out and posts no
+  lenses while trivial or docs-only diffs still pass and look fine. The preflight and the setup wizard now
+  flag a reasoning reviewer (a property of the model, not the host) and point to a faster one.
+- **A configurable per-call review timeout that fails fast.** The model call now has a default 45s timeout
+  (`review.timeout_seconds` / `ASDD_MODEL_TIMEOUT`), above a fast reviewer's real-diff time and below a
+  reasoning model's server-side hang, so a slow reviewer fails fast with an actionable message naming the
+  cause instead of burning the full server timeout on every retry.
+
 ### Fixed
 - **Review runtime recovers the model's JSON.** A reasoning model wraps its review object in analysis
   prose (with its own braces), code fences, or trailing commentary, or emits it in a separate
@@ -28,6 +38,12 @@ draft, so pin a conformance claim to a commit or date.
   "update this branch with main" (or the GitHub "Update branch" button) added an unsigned merge commit
   that failed DCO with no clean fix, because a merge commit cannot be signed without rewriting history.
   The commit list is now built with `--no-merges`, matching the DCO convention.
+- **The review adapter falls back when a provider rejects `response_format`.** Some OpenAI-compatible
+  providers (seen with a GLM reasoning model on Runware) return HTTP 500 on `response_format:
+  {type: json_object}`, so the model lenses produced no output and the review failed closed even though
+  the connection was fine. The adapter now asks for `response_format` on the first attempt and drops it on
+  retry, leaning on the system prompt and the extractor, and logs the raw error body on a persistent
+  failure so the cause is named.
 - **Model calls fall back to `max_completion_tokens`.** A newer OpenAI reasoning model rejects `max_tokens`
   with a 400 asking for `max_completion_tokens`, so `connect-check` reported it dead and the developer
   council could not call it. Both now send `max_tokens` first and retry once with the renamed parameter on

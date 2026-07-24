@@ -55,4 +55,14 @@ out="$(python3 "$DOC" "$TMP/nope.yml" 2>&1)"; rc=$?
 [ "$rc" = "1" ] && grep -q 'config not found' <<<"$out" \
   && ok "missing config fails cleanly (exit 1)" || bad "missing-config case (exit $rc)"
 
+# A reasoning-model reviewer must WARN (it times out on a real diff) but stay READY; a fast reviewer must not.
+printf 'lanes:\n  - feature\nmodels:\n  developer: ""\n  reviewer: "zai:glm@5.2"\n  test_author: "moonshotai:kimi@k2.6"\n  test_runner: "moonshotai:kimi@k2.6"\n' > "$TMP/glm.yml"
+out="$(python3 "$DOC" "$TMP/glm.yml" 2>&1)"
+grep -qi 'reasoning model' <<<"$out" && grep -q 'RESULT: READY' <<<"$out" \
+  && ok "reasoning reviewer WARNs but stays READY" || bad "reasoning-reviewer WARN missing"
+printf 'lanes:\n  - feature\nmodels:\n  developer: ""\n  reviewer: "openai:gpt-oss-120b"\n  test_author: "moonshotai:kimi@k2.6"\n  test_runner: "moonshotai:kimi@k2.6"\n' > "$TMP/fast.yml"
+out="$(python3 "$DOC" "$TMP/fast.yml" 2>&1)"
+grep -qi 'reasoning model' <<<"$out" && bad "fast reviewer wrongly warned" \
+  || ok "fast reviewer does not trigger the reasoning warn"
+
 [ "$fail" = "0" ] && { echo "doctor self-test: PASS"; exit 0; } || { echo "doctor self-test: FAIL"; exit 1; }
