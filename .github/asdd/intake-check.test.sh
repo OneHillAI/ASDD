@@ -210,4 +210,13 @@ jq -e '.problems | map(select(startswith("Convention:"))) | length > 0' "$CONVW/
 conv_case "a clean change passes the conventions gate" "$CONVCFG" "# a clean added line" true true
 conv_case "no conventions block is inert even with the banned char present" "$TREE/asdd-default.yml" "# note ${DASH} here" true true
 
+# DCO must skip merge commits: the intake workflow builds the commit list with --no-merges, or a routine
+# branch-update merge (unsignable without rewriting history) fails DCO. Guard that the flag stays.
+WF="$DIR/../workflows/asdd-intake.yml"
+if grep -q -- '--no-merges' "$WF" 2>/dev/null; then
+  echo "  ok   intake commit list excludes merge commits (DCO skips merges)"
+else
+  echo "  FAIL intake commit list missing --no-merges (a branch-update merge would fail DCO)"; fail=1
+fi
+
 [ "$fail" = "0" ] && { echo "intake-check self-test: PASS"; exit 0; } || { echo "intake-check self-test: FAIL"; exit 1; }
