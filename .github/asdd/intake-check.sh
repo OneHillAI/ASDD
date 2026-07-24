@@ -49,8 +49,9 @@ lanes_re="$(awk '
   /^lanes:/    { f=1; next }
   /^[A-Za-z]/  { f=0 }
   f && /^[[:space:]]*-/ {
+    sub(/[[:space:]]*#.*$/, "")                     # strip an inline comment (a lane token has no #)
     gsub(/^[[:space:]]*-[[:space:]]*"?|"?[[:space:]]*$/, "")
-    printf "%s%s", sep, $0; sep="|"
+    if ($0 != "") { printf "%s%s", sep, $0; sep="|" }
   }' "$ASDD_CONFIG" 2>/dev/null)"
 [ -n "$lanes_re" ] || lanes_re='feature|fix|docs|chore'
 lane_count=0
@@ -88,8 +89,9 @@ spec_globs="$(awk '
   /^spec_paths:/ { f=1; next }
   /^[A-Za-z]/    { f=0 }
   f && /^[[:space:]]*-/ {
+    sub(/[[:space:]]*#.*$/, "")                     # strip an inline comment (a path token has no #)
     gsub(/^[[:space:]]*-[[:space:]]*"?|"?[[:space:]]*$/, "")
-    print
+    if ($0 != "") print
   }' "$ASDD_CONFIG" 2>/dev/null)"
 # No explicit spec_paths => default by spec_tool. An OpenSpec project (`spec_tool: openspec`) keeps its
 # specs as change deltas + living specs, so the gate targets that layout without the adopter hand-writing
