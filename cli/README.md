@@ -148,6 +148,22 @@ alongside the gates because they depend on it.
 > key, in their own keyring, **never in the repo**. The **governance agents** run on the admin's key,
 > held as repo secrets. Different people, different keys, by construction.
 
+## connect-check
+
+`asdd connect-check [CONFIG]` answers one question a fresh deployment must not get wrong: **is each agent's
+model actually connected, or dry-running?** Every ASDD agent (the review lenses, test-author, test-runner,
+documentation, interaction, the developer council) dry-runs until its model runtime is connected, so a
+deployment can look set up while no agent does real work: a pull request's review comes back a placeholder,
+not a real review the human can judge. For each role it resolves the model, endpoint and key the gates use
+and sends one tiny request, reporting **LIVE** or **NOT CONNECTED** per role, with a summary. It exits
+non-zero if any configured role is not connected, so `asdd setup` runs it at the end and CI can gate on it.
+Use `--no-ping` for a network-free config-completeness check.
+
+```bash
+asdd connect-check              # ping every role (+ the council if configured)
+asdd connect-check --no-ping    # "is the runtime configured?" without a model call
+```
+
 ## kit-check
 
 `kit-check.py` keeps [`asdd-kit.yml`](../asdd-kit.yml) - **the kit map** - honest. The map is what an
@@ -364,6 +380,33 @@ leaves the same trail a CI agent does. The model comes from the roster (`models.
 way the gate resolves the reviewer; with no model wired it prints a labelled dry run (the prompt is still
 assembled safely). The role defaults per agent (`triage`->triage, `review-contributor`->review,
 `review-merge`->merge, `support`->spec); pass `--role` to override.
+
+## dev-council
+
+`asdd dev-council --change <openspec-change-id> [--transcript FILE] [--test-cmd CMD] [--models a,b,c]` runs
+the **optional** developer council: instead of one model implementing a change, 2 to 5 diverse models
+**propose -> cross-critique -> synthesise -> verify** against the change's acceptance criteria and return
+one result. It is a produce-loop developer (a sibling to `run-agent`), opt-in; the single-model developer
+stays the default. Configure it in `.asdd.yml`:
+
+```yaml
+dev_council:
+  models: ["provider:a", "provider:b", "provider:c"]   # 2 to 5; the LAST is the lead synthesiser
+  max_critique_rounds: 1
+  max_refine_rounds: 1
+```
+
+Bring the models either way: a shared `ASDD_MODEL_URL` + `ASDD_RUNTIME_TOKEN` with the model names above,
+or per-member `ASDD_MODEL_URL__COUNCIL_<i>` / `ASDD_RUNTIME_TOKEN__COUNCIL_<i>`. It is **spec-and-test
+grounded, not consensus**: proposers draft against the acceptance criteria, the verify stage reuses the
+`test-author`/`test-runner` roles on models **distinct** from the council, and one refine round runs on a
+failure. A heterogeneity check warns on same-family members and fails if a council model also serves a
+test role. It **records its process** (proposals, critiques, disagreements, synthesis rationale, verify)
+to the ledger, so `asdd audit corpus` and `asdd audit knowledge` learn from it: a set-aside approach
+becomes a `rejected` OKGF page, the verified synthesis an `exemplar`. Content is digested, never the code.
+With no model wired it prints a labelled dry run. The Goose kit ships the runner
+`.github/asdd/operate/dev-council.sh`; a bring-your-own runtime implements the contract in
+[agents/runtime.md](../agents/runtime.md).
 
 ## doctor
 

@@ -50,6 +50,17 @@ model. The recipes are **provider-neutral**; you set the model per run. For a fr
 ollama pull qwen3:8b
 ```
 
+**Then connect the runtime, and verify it.** Naming the models in the roster is not the same as connecting
+them: every agent DRY-RUNS (a review comes back a placeholder, not a real review) until a model runtime is
+reachable. `asdd setup` runs the check at the end, and you can re-run it any time:
+
+```bash
+asdd connect-check      # LIVE or NOT CONNECTED, per role. Non-zero until every configured agent is live.
+```
+
+Connect a runtime by setting `ASDD_MODEL_URL` (variable) + `ASDD_RUNTIME_TOKEN` (secret), or the per-role /
+`__COUNCIL_<i>` variants, then re-run `asdd connect-check` until it is green.
+
 Then assign a model to each agent role. Do not hand-edit `.asdd.yml` blind - the wizard prompts for each
 role, keeps the developer distinct from the test models (the one hard rule), and prints the run commands
 and CI secrets for the models you picked:
@@ -79,6 +90,20 @@ bring-your-own developer should run on its model's **native** provider, where th
 correctly. For Runware specifically, set `supports_streaming: false` on the provider (see
 [Troubleshooting](troubleshooting.md)). Both traps have troubleshooting entries if you hit them on a
 different provider.
+
+Every role that goes through the OpenAI-compatible adapter has a second requirement: it needs **strict
+JSON output**, not just tool tolerance. That is the **reviewer and the model lenses**, and also the
+**operator-run fixed-prompt agents** that share the same adapter through `run-agent.sh` (triage, support,
+review-contributor, review-merge). A reasoning model wraps its answer in analysis prose or emits it in a
+separate `reasoning_content` field; the adapter now recovers the JSON object from either
+([JSON recovery](../../.github/asdd/runtime/extract-json.py)), so GLM-5.2 works for these roles. But a
+model that reliably returns a clean JSON object is the more predictable choice for them; a reasoning model
+shines as the free-form **developer** or a **developer-council** member, where prose is the point. (The
+Goose-run operate agents - documentation, test-author, test-runner, interaction - take a different path:
+Goose parses the model itself and the agent writes its result file, so they do not depend on this
+extraction.) If a live call keeps failing closed to "human should review manually", the adapter logs a
+redacted diagnostic naming the cause, and [Troubleshooting](troubleshooting.md) covers switching the role
+to a JSON-reliable model.
 
 **Or let an agent walk you through it.** The setup recipe reads [`asdd-kit.yml`](../../asdd-kit.yml) -
 the kit map: every role, its recipe, its model key, where it runs, and the invariants - so it starts
@@ -212,6 +237,30 @@ The gates are callable directly too: `asdd merge-eligibility ...`, `asdd spec-ch
 ```bash
 asdd check-models --strict     # fails if a test model == developer
 ```
+
+## Optional: the developer council
+
+The single-model developer is the default, and it is bring-your-own. If you want more than one model on a
+change, the **developer council** is an optional produce-loop developer: 2 to 5 diverse models propose,
+cross-critique, synthesise and verify one implementation of an OpenSpec change. `init --goose` copies its
+runner, and `asdd setup` offers to configure it. Turn it on by naming the models in `.asdd.yml`:
+
+```yaml
+dev_council:
+  models: ["provider:a", "provider:b", "provider:c"]   # 2 to 5; the LAST is the lead synthesiser
+```
+
+Run it in your produce session:
+
+```bash
+asdd dev-council --change my-change --transcript council.json
+# or the shipped runner:  bash .github/asdd/operate/dev-council.sh my-change
+```
+
+Wire the models like the rest of the fleet (shared `ASDD_MODEL_URL` + `ASDD_RUNTIME_TOKEN`, or per-member
+`__COUNCIL_<i>` variants). It records its process to the ledger, so the corpus and knowledge base learn
+from it. Full detail: [cli/README.md](https://github.com/OneHillAI/ASDD/blob/main/cli/README.md) and the
+contract in [agents/runtime.md](https://github.com/OneHillAI/ASDD/blob/main/agents/runtime.md).
 
 ## Share the recipes
 

@@ -198,14 +198,20 @@ def print_steps(roles, recipe_dir):
     print("       ASDD_MODEL_URL       (variable)  full .../v1/chat/completions URL")
     print(f"       ASDD_MODEL           (variable)  the reviewer model"
           f"{' (' + reviewer + ')' if reviewer else ''}")
+    print("  3. Give your agents their own GitHub identity, so they open PRs you approve:")
+    print("       a bot account with a fine-grained token (simplest for one person),")
+    print("       or a GitHub App (scoped, revocable). You cannot approve your own PRs,")
+    print("       so your agents must not open them as you, or the merge gate is unsatisfiable.")
+    print("       The token is a host env var for produce-loop agents, a repo secret for CI agents.")
+    print("       Walk-through: docs/guides/using-asdd-solo.md")
     runs = deployment_run_commands(by_key, recipe_dir)
     if runs:
-        print("  3. Run each deployment agent with its model:")
+        print("  4. Run each deployment agent with its model:")
         for r in runs:
             print(r)
     else:
-        print("  3. Set the deployment role models above to get ready-to-run commands.")
-    print("  4. Prove the gates run with no keys:")
+        print("  4. Set the deployment role models above to get ready-to-run commands.")
+    print("  5. Prove the gates run with no keys:")
     print("       sh cli/asdd-mcp.test.sh")
 
 
@@ -237,6 +243,34 @@ def apply_sets(roles, sets):
             sys.exit(2)
         by_key[key]["value"] = val.strip()
     return roles
+
+
+def prompt_dev_council(lines):
+    """Optional, opt-in: offer to configure the developer council and append a dev_council block if the
+    operator wants it and none exists. The single-model developer stays the default. Returns True if it
+    changed `lines`."""
+    if any(l.rstrip() == "dev_council:" for l in lines):
+        print("\nDeveloper council: already configured (dev_council in .asdd.yml); edit it there to change.")
+        return False
+    print("\nDeveloper council (optional): 2 to 5 diverse models propose, cross-critique, synthesise and")
+    print("verify one implementation of an OpenSpec change. The single-model developer stays the default.")
+    try:
+        if input("  configure it now? [y/N]> ").strip().lower() not in ("y", "yes"):
+            return False
+        raw = input("  council models, comma-separated (2 to 5; the LAST is the lead synthesiser)\n    models> ").strip()
+    except EOFError:
+        return False
+    models = [m.strip() for m in raw.split(",") if m.strip()]
+    if not (2 <= len(models) <= 5):
+        print("  need 2 to 5 models; leaving the council unconfigured (set dev_council in .asdd.yml later).")
+        return False
+    lines.extend(["",
+                  "# Developer council (optional; `asdd dev-council`). 2 to 5 diverse models; the LAST is the lead.",
+                  "dev_council:", "  models:"]
+                 + [f'    - "{m}"' for m in models]
+                 + ["  max_critique_rounds: 1", "  max_refine_rounds: 1"])
+    print(f"  added a dev_council block with {len(models)} models.")
+    return True
 
 
 def main():
@@ -300,6 +334,7 @@ def main():
     elif sys.stdin.isatty():
         prompt_roles(roles)
         spec_tool_new = prompt_spec_tool(current_spec_tool(lines))
+        prompt_dev_council(lines)   # opt-in; appends a dev_council block if wanted
         changed = True
     else:
         print(f"Current model assignments in {config} (no tty; pass --set to change):")
@@ -347,6 +382,16 @@ def main():
             print(f"  {line}")
         if code != 0:
             rc = 1
+        # The unmissable step: a roster names the models, but every agent DRY-RUNS until a model runtime
+        # is connected. A deployment can look set up while no agent does real work (a review comes back a
+        # placeholder, not a real review). Surface the connection status here, at the end of setup.
+        cc = subprocess.run(["python3", os.path.join(HERE, "connect-check.py"), config, "--no-ping"],
+                            capture_output=True, text=True)
+        print("\n" + cc.stdout.strip())
+        if cc.returncode != 0:
+            print("\nNext: connect a model runtime so the agents run live, then verify with `asdd "
+                  "connect-check`:\n  ASDD_MODEL_URL (variable) = your provider's .../v1/chat/completions"
+                  "\n  ASDD_RUNTIME_TOKEN (secret) = your API key   (or the per-role / __COUNCIL_<i> variants)")
     return rc
 
 

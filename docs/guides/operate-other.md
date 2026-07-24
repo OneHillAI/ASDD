@@ -42,4 +42,9 @@ hold: the intake gate runs on every PR, the analysis job stays `contents: read`,
 through the policy decision point, and `check-models --strict` runs once your fleet's models are set. A
 runtime choice never relaxes a MUST in [STANDARD.md](https://github.com/OneHillAI/ASDD/blob/main/STANDARD.md).
 
+The optional **developer council** (2 to 5 models on one change) is runtime-neutral too: the reference is
+`asdd dev-council`, and a bring-your-own runtime implements the same loop and recording contract. The
+council contract (roles, the propose to cross-critique to synthesise to verify sequence, the recording
+obligation) is in [agents/runtime.md](https://github.com/OneHillAI/ASDD/blob/main/agents/runtime.md).
+
 Next: [the runtime contract](https://github.com/OneHillAI/ASDD/blob/main/agents/runtime.md), [conformance](https://github.com/OneHillAI/ASDD/blob/main/CONFORMANCE.md)

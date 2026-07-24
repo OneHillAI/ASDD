@@ -24,6 +24,7 @@ governed, disclosed, secure, and quality-gated. These docs are organised by what
 
 - [Deploy ASDD with Goose (end to end)](guides/deploy.md): the full setup, gates + agents + knowledge + interfaces, with a "what you'll need" checklist. Start here for a full deployment.
 - [Adopt the govern layer](guides/adopt-govern.md): the CI gates that make a project conformant.
+- [Using ASDD as one person](guides/using-asdd-solo.md): run your agents under their own identity so you, a solo maintainer, can approve and merge their PRs.
 - [Adopt into a project that already exists](guides/adopt-existing-project.md): the brownfield path.
   Declare the spec layout, changelog format, impact log and house style your project already has, so the
   agents conform to them instead of guessing. Gates judge the change, never your existing tree.

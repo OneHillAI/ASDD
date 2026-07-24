@@ -35,6 +35,12 @@ CHECKS = [
     ("operate-run deterministic emission",      ["bash", "cli/operate-run.test.sh"],
      "zero", "the run wrapper emits exactly one record even when the agent run produced nothing, so a "
              "provider timeout mid-run cannot silently lose the action"),
+    ("developer council orchestrator",          ["bash", "cli/dev-council.test.sh"],
+     "zero", "the optional multi-model developer: sizing (2 to 5), heterogeneity (developer != testers), "
+             "dry-run, one record per run, and the council's learnings deriving exemplar/rejected OKGF pages"),
+    ("connect-check: agents connected or dry",  ["bash", "cli/connect-check.test.sh"],
+     "zero", "every agent dry-runs until its model runtime is connected; connect-check reports LIVE or NOT "
+             "CONNECTED per role so a fresh setup cannot silently do no real work"),
     ("audit ledger: record, corpus, knowledge", ["bash", "cli/audit.test.sh"],
      "zero", "every role records (developer included), the chain detects tamper, and the training and "
              "knowledge views read the trail without leaking chain plumbing or reviewed content"),
@@ -54,6 +60,9 @@ CHECKS = [
      "zero", "each operate recipe keeps its invariants: gates wired, public stays execution-free, membrane intact"),
     ("review lenses resolve via the roster",    ["sh", "cli/run-review-resolve.test.sh"],
      "zero", "run-review resolves the reviewer role's model/endpoint/key and never prints the key"),
+    ("review runtime recovers model JSON",       ["bash", ".github/asdd/runtime/extract-json.test.sh"],
+     "zero", "a reasoning model wraps its JSON in prose/fences/braces; the runtime recovers the review "
+             "object instead of losing it to a human-review placeholder, and still rejects genuine non-JSON"),
     ("roster resolves to a role's model",       ["sh", "cli/resolve-model.test.sh"],
      "zero", "a role runs on models.<role> from the roster, ASDD_MODEL is only the fallback, unset fails loudly"),
     ("kit map matches reality",                 ["sh", "cli/kit-check.test.sh"],

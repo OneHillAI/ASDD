@@ -4,6 +4,18 @@ Notable changes to ASDD. The format follows [Keep a Changelog](https://keepachan
 is versioned with [Semantic Versioning](https://semver.org). While pre-1.0 the standard is a moving
 draft, so pin a conformance claim to a commit or date.
 
+## [Unreleased]
+
+### Fixed
+- **Review runtime recovers the model's JSON.** A reasoning model wraps its review object in analysis
+  prose (with its own braces), code fences, or trailing commentary, or emits it in a separate
+  `reasoning_content` field; the old first-brace-to-last-brace recovery then captured an invalid span and
+  the review degraded to a "human should review manually" placeholder even though the model had reviewed.
+  Extraction now uses a real JSON parser ([extract-json.py](.github/asdd/runtime/extract-json.py)) that
+  recovers the review object and still fails closed on genuine non-JSON, and the adapter logs a key-safe
+  redacted diagnostic on a persistent failure. Spec:
+  [review-json-recovery.md](docs/specs/review-json-recovery.md).
+
 ## [0.1.0] - 2026-07-22
 
 Initial public release.
