@@ -6,6 +6,12 @@ draft, so pin a conformance claim to a commit or date.
 
 ## [Unreleased]
 
+### Added
+- **`doctor` and `setup` warn when the reviewer is a heavy reasoning model.** A reasoning model reasons at
+  length and can exceed a hosted inference window on a real code diff, so the review times out and posts no
+  lenses while trivial or docs-only diffs still pass and look fine. The preflight and the setup wizard now
+  flag a reasoning reviewer (a property of the model, not the host) and point to a faster one.
+
 ### Fixed
 - **Review runtime recovers the model's JSON.** A reasoning model wraps its review object in analysis
   prose (with its own braces), code fences, or trailing commentary, or emits it in a separate

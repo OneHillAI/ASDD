@@ -374,6 +374,17 @@ def main():
 
     print_steps(roles, recipe_dir)
 
+    # WARN if the reviewer got a heavy reasoning model: it can exceed a hosted inference window on a real
+    # code diff and time out with no lenses, while trivial diffs pass. Canonical check: cli/doctor.py
+    # check_reviewer_reasoning. Advisory; setup still succeeds.
+    reasoning_hints = ("glm", "deepseek-r1", "deepseek_r1", "deepseek-reasoner", "reasoner", "qwq",
+                       "-thinking", "thinking-", "magistral", "o1-", "o1@", "o3-", "o3@", "o4-", "minimax-m1")
+    rev = next((r["value"] for r in roles if r["key"] == "reviewer"), "")
+    if rev and any(h in rev.lower() for h in reasoning_hints):
+        print(f"\nWARNING: models.reviewer ({rev}) looks like a reasoning model. A reasoning model can "
+              "exceed a hosted inference window on a real code diff and time out with no lenses, while "
+              "trivial diffs still pass. Prefer a faster non-reasoning reviewer.")
+
     rc = 0
     if not no_validate:
         code, out = run_check(config, strict=changed)

@@ -200,6 +200,48 @@ def check_recipes(rep, config):
                 "re-run `asdd init --goose` to scaffold them")
 
 
+# Model-name fragments for families that reason at length. A reasoning reviewer can exceed a hosted
+# inference window on a substantive diff (observed live: a GLM reviewer returns HTTP 500 "inference timed
+# out" on a real code diff, while trivial or docs-only diffs pass and look fine), so the review silently
+# produces no lenses. Heuristic name match, WARN not FAIL, and it is a property of the MODEL, not the host.
+_REASONING_HINTS = ("glm", "deepseek-r1", "deepseek_r1", "deepseek-reasoner", "reasoner", "qwq",
+                    "-thinking", "thinking-", "magistral", "o1-", "o1@", "o3-", "o3@", "o4-", "minimax-m1")
+
+
+def _model_of(config, role):
+    """The model for a roster role (models.<role>), read without a YAML dependency (kit text-scan)."""
+    inblk = False
+    try:
+        with open(config) as fh:
+            for line in fh:
+                s = line.split("#", 1)[0].rstrip()
+                if s.strip() == "models:":
+                    inblk = True
+                    continue
+                if inblk:
+                    if s and not s[0].isspace():
+                        break
+                    t = s.strip()
+                    if t.startswith(f"{role}:"):
+                        return t[len(role) + 1:].strip().strip('"').strip("'")
+    except OSError:
+        return None
+    return None
+
+
+def check_reviewer_reasoning(rep, config):
+    """WARN when the reviewer is a heavy reasoning model, which times out reviewing a real diff."""
+    model = _model_of(config, "reviewer")
+    if not model:
+        return
+    if any(h in model.lower() for h in _REASONING_HINTS):
+        rep.add(WARN, f"the reviewer looks like a reasoning model ({model})",
+                "a reasoning model reasons at length and can exceed a hosted inference window on a real "
+                "code diff, so the review times out and posts no lenses while trivial diffs still pass",
+                "set models.reviewer to a faster non-reasoning model, or split the review per lens; the "
+                "per-call timeout will otherwise fail fast and name this cause")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Preflight the ASDD Goose operate path.")
     ap.add_argument("config", nargs="?", default=".asdd.yml",
@@ -218,6 +260,7 @@ def main():
     check_goose(rep)
     check_spec_tool(rep, a.config)
     check_roster(rep, a.config)
+    check_reviewer_reasoning(rep, a.config)
     check_conventions(rep, a.config)
     check_runtime_key(rep)
     check_recipes(rep, a.config)
