@@ -81,14 +81,32 @@ def ping(model, url, token, timeout=30):
     endpoint = url.rstrip("/")
     if not endpoint.endswith("/chat/completions"):
         endpoint += "/chat/completions"
-    body = json.dumps({"model": model, "messages": [{"role": "user", "content": "ping"}],
-                       "max_tokens": 1}).encode("utf-8")
-    req = urllib.request.Request(endpoint, data=body, headers={
-        "Authorization": "Bearer " + token, "Content-Type": "application/json"})
-    try:
+    # max_tokens 64 (not 1): a 1-token cap makes some reasoning models 500 on the ping even though they
+    # answer fine with a real budget, which would false-fail a reachable model. 64 is small but enough.
+    def once(tok_param):
+        body = json.dumps({"model": model, "messages": [{"role": "user", "content": "ping"}],
+                           tok_param: 64}).encode("utf-8")
+        req = urllib.request.Request(endpoint, data=body, headers={
+            "Authorization": "Bearer " + token, "Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return (200 <= resp.status < 300), f"HTTP {resp.status}"
+    try:
+        return once("max_tokens")
     except urllib.error.HTTPError as e:
+        # A newer OpenAI reasoning model rejects max_tokens with a 400 naming max_completion_tokens.
+        # Retry once with the renamed parameter; every other model keeps working on max_tokens.
+        detail = ""
+        try:
+            detail = e.read().decode("utf-8", "replace")
+        except Exception:
+            pass
+        if e.code == 400 and "max_completion_tokens" in detail:
+            try:
+                return once("max_completion_tokens")
+            except urllib.error.HTTPError as e2:
+                return False, f"HTTP {e2.code}"
+            except Exception as e2:
+                return False, type(e2).__name__
         return False, f"HTTP {e.code}"
     except Exception as e:
         return False, type(e).__name__

@@ -42,6 +42,37 @@ out="$(ASDD_MODEL_URL=https://x/v1 ASDD_RUNTIME_TOKEN=y python3 "$CC" "$T/.asdd.
 printf '%s' "$out" | grep -q "council\[1\]" \
   && ok "council members are checked when configured" || bad "council not checked: $out"
 
+# 5. Reasoning-model parameter fallback (mocked, no network): a 400 naming max_completion_tokens must
+#    retry the ping with the renamed parameter and succeed; a normal model still uses max_tokens, no retry.
+if python3 - "$CC" <<'PY'
+import importlib.util, urllib.request, urllib.error, io, sys
+spec = importlib.util.spec_from_file_location("cc", sys.argv[1])
+cc = importlib.util.module_from_spec(spec); spec.loader.exec_module(cc)
+class Resp:
+    status = 200
+    def __enter__(self): return self
+    def __exit__(self, *a): return False
+    def read(self): return b'{"choices":[{"message":{"content":"ok"}}]}'
+def err():
+    b = b'{"error":{"message":"Unsupported parameter: max_tokens is not supported with this model. Use max_completion_tokens instead."}}'
+    return urllib.error.HTTPError("u", 400, "bad request", {}, io.BytesIO(b))
+calls = []
+def fake(req, timeout=None):
+    p = req.data.decode(); calls.append(p)
+    if '"max_tokens"' in p:
+        raise err()
+    return Resp()
+urllib.request.urlopen = fake
+ok, why = cc.ping("m", "https://x/v1/chat/completions", "t")
+assert ok, ("reasoning model reported dead", why)
+assert any('"max_completion_tokens"' in c for c in calls), "did not retry with the renamed parameter"
+calls.clear()
+urllib.request.urlopen = lambda req, timeout=None: (calls.append(req.data.decode()) or Resp())
+ok, why = cc.ping("m", "https://x/v1/chat/completions", "t")
+assert ok and len(calls) == 1 and 'max_completion_tokens' not in calls[0], "normal model path changed"
+PY
+then ok "reasoning-model max_completion_tokens fallback (mocked)"; else bad "reasoning-model max_completion_tokens fallback"; fi
+
 rm -rf "$T"
 echo
 [ "$fail" = 0 ] && echo "connect-check self-test: PASS" || echo "connect-check self-test: FAIL"

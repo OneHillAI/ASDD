@@ -175,6 +175,13 @@ case_run "two lanes fail (exactly one required)" \
 case_run "zero lanes fail" \
   asdd-default.yml "" "$DISC" "$(printf 'A\tdocs/specs/new.md\n')" false true
 
+# A documented config carries inline comments on its lanes and spec_paths. The gate must strip the
+# comment from each token; before the fix the awk kept the trailing '# ...', so a bare lane label never
+# matched (laned=false, every PR failed) and a commented spec glob matched nothing (spec_ok=false).
+printf 'lanes:\n  - feature   # new capability\n  - chore     # trivial: CI, tooling, deps\nspec_paths:\n  - docs/specs/*.md   # the builtin specs\n' > "$TREE/asdd-commented.yml"
+case_run "inline-commented lanes and spec_paths still accept a bare label + real spec" \
+  asdd-commented.yml "feature" "$DISC" "$(printf 'A\tdocs/specs/new.md\n')" true true
+
 # --- check 6: the declared-conventions gate ----------------------------------------------------------
 # A project that declares a `conventions:` block has its change held to it at intake: the gate shells to
 # cli/conventions-check.py against changes.diff, and a violation fails intake through the same verdict a

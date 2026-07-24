@@ -35,6 +35,12 @@ if bash "$ROOT/cli/init.sh" --goose "$G" >/dev/null 2>&1; then
     [ -f "$G/cli/$g" ] || { echo "FAIL: --goose did not copy cli/$g"; fail=1; }
   done
 
+  # The review runtime's JSON extraction: openai-compat.sh shells to extract-json.py, so it must travel
+  # with the runtime or a reasoning model's review falls back to the weak jq path and can fail to parse.
+  for r in generic.sh openai-compat.sh extract-json.py; do
+    [ -f "$G/.github/asdd/runtime/$r" ] || { echo "FAIL: --goose did not copy .github/asdd/runtime/$r"; fail=1; }
+  done
+
   # The developer council's runner drives cli/dev-council.py; the orchestrator is useless to an adopter if
   # the runner the docs point at never lands.
   [ -f "$G/.github/asdd/operate/dev-council.sh" ] || { echo "FAIL: --goose copied dev-council.py but not the operate/dev-council.sh runner"; fail=1; }

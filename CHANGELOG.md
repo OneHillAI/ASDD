@@ -15,6 +15,19 @@ draft, so pin a conformance claim to a commit or date.
   recovers the review object and still fails closed on genuine non-JSON, and the adapter logs a key-safe
   redacted diagnostic on a persistent failure. Spec:
   [review-json-recovery.md](docs/specs/review-json-recovery.md).
+- **Config list-readers ignore inline comments.** A documented config, `- chore  # trivial`, left the
+  trailing comment on the token, so no lane label ever matched (intake failed for every PR), a commented
+  `spec_paths` glob matched nothing, and the CODEOWNERS generator emitted a broken owner line. The lane,
+  spec-path, and protected-path readers now strip an inline comment before the token.
+- **`asdd init --goose` copies the review runtime's JSON extractor.** `openai-compat.sh` shells to
+  `extract-json.py`, but the runtime copy loop omitted it, so a fresh adopter fell back to the weaker
+  extraction and a reasoning model's review could fail. It now travels with the runtime.
+- **`connect-check` pings with a real token budget.** A one-token ping made some reasoning models return
+  HTTP 500, false-failing a reachable model; the ping now uses a small but sufficient budget.
+- **Model calls fall back to `max_completion_tokens`.** A newer OpenAI reasoning model rejects `max_tokens`
+  with a 400 asking for `max_completion_tokens`, so `connect-check` reported it dead and the developer
+  council could not call it. Both now send `max_tokens` first and retry once with the renamed parameter on
+  that specific 400; every other model is unaffected.
 
 ## [0.1.0] - 2026-07-22
 
