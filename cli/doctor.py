@@ -89,6 +89,31 @@ def _read_scalar(config, key):
     return None
 
 
+def _git_config(key):
+    try:
+        r = subprocess.run(["git", "config", "--get", key], capture_output=True, text=True)
+        return r.stdout.strip() if r.returncode == 0 else ""
+    except Exception:
+        return ""
+
+
+def check_git_identity(rep):
+    """A bring-your-own developer must be able to produce a CONFORMANT commit: a git identity for the author
+    attribution and the DCO sign-off intake requires. doctor reported READY while git identity was unset
+    (locally and globally), so a contributor then could not sign off or attribute a commit and every PR
+    would fail intake. WARN, with the exact fix."""
+    name = _git_config("user.name")
+    email = _git_config("user.email")
+    if name and email:
+        rep.add(OK, "git identity", f"{name} <{email}> - commits can be attributed and DCO-signed")
+        return
+    missing = " and ".join(k for k, v in (("user.name", name), ("user.email", email)) if not v)
+    rep.add(WARN, "git identity is not set",
+            f"{missing} unset, so a commit cannot carry the author trailer or a DCO sign-off, and intake "
+            "(which requires disclosure + DCO) would reject every PR",
+            "git config --global user.name 'Your Name' && git config --global user.email 'you@example.com'")
+
+
 def check_python(rep):
     v = sys.version_info
     s = f"{v.major}.{v.minor}.{v.micro}"
@@ -341,6 +366,7 @@ def main():
         return 1
 
     check_python(rep)
+    check_git_identity(rep)
     check_goose(rep)
     check_spec_tool(rep, a.config)
     check_roster(rep, a.config)

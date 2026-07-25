@@ -56,6 +56,7 @@ reachable. `asdd setup` runs the check at the end, and you can re-run it any tim
 
 ```bash
 asdd connect-check      # LIVE or NOT CONNECTED, per role. Non-zero until every configured agent is live.
+asdd connect-check --json   # same result as machine-readable JSON, for a setup script or CI to gate on.
 ```
 
 Connect a runtime by setting `ASDD_MODEL_URL` (variable) + `ASDD_RUNTIME_TOKEN` (secret), or the per-role /
