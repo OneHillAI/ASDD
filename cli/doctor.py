@@ -267,9 +267,10 @@ def _audit_sink(config):
 def check_audit_export_completeness(rep, config):
     """When a sink is configured, every path that RECORDS must also EXPORT, or its trail is silently
     dropped. Enumerate the record-writers dynamically (a NEW recorder added later with no export is then
-    caught, instead of a hardcoded list going stale), and WARN on any with no export route. A recorder is
-    covered when its own file calls audit-export, or a runner/workflow that invokes it by name does (its
-    runner or its CI job), so the record and the export can live in the credential-safe place."""
+    caught, instead of a hardcoded list going stale), and WARN on any with no export route. A shared library
+    recorder is covered when its own file calls audit-export or a runner that invokes it by name does. A CI
+    workflow is held to a stricter rule: because the sink credential lives in the job, a workflow that runs a
+    non-self-exporting recorder must export in that same job, not lean on a runner it bypassed."""
     sink = _audit_sink(config)
     if not sink or sink == "none":
         return  # opting in is required; with no sink there is nothing to export.
@@ -291,6 +292,22 @@ def check_audit_export_completeness(rep, config):
         if "audit-export" in t or os.path.basename(f) in exporters:
             continue  # exports itself, or a runner/workflow that names it exports.
         missing.append(os.path.relpath(f, root))
+
+    # The workflow surface has a stricter rule than a shared library file. A CI job is where the sink
+    # credential lives, so a workflow that runs a recorder which does not itself export MUST export in that
+    # same job; it cannot lean on a sibling runner it bypassed. A deployment that wires dev-council.py (or a
+    # raw audit.py append) straight into a workflow, instead of through the exporting dev-council.sh runner,
+    # would otherwise drop the produce trail with the sibling-runner escape hiding it. Match that case by
+    # its own file, not by a runner that names the tool.
+    wf_dir = os.path.join(root, ".github", "workflows")
+    wf_rec_re = re.compile(r"dev-council\.py|audit\.py\s+(append|from-review)")
+    for dp, _sub, fs in os.walk(wf_dir) if os.path.isdir(wf_dir) else []:
+        for f in fs:
+            if not f.endswith((".yml", ".yaml")):
+                continue
+            p = os.path.join(dp, f)
+            if wf_rec_re.search(_read(p)) and "audit-export" not in _read(p):
+                missing.append(os.path.relpath(p, root))
     if missing:
         rep.add(WARN, "an agent records but has no export route",
                 "sink is '" + sink + "', but these record to the ledger with no export step, so their "

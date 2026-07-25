@@ -13,9 +13,13 @@ draft, so pin a conformance claim to a commit or date.
   operator agents. Now every path records through one route and exports from a credential-safe point (the
   produce wrapper, the runners, the council), the untrusted PR review keeps its record/publish split, and
   `doctor` runs a **dynamic completeness check** that enumerates every record-writing path and warns on any
-  with no export route, so a new agent added later cannot silently drop its trail. `audit-export.sh` also
-  derives the governed repo from the git remote when `GITHUB_REPOSITORY` is unset, so its "never export
-  into the repo you govern" refusal holds on host runs, not only in CI.
+  with no export route, so a new agent added later cannot silently drop its trail. The check also covers the
+  CI workflow surface with a stricter rule: because the sink credential lives in the job, a workflow that
+  runs a recorder which does not itself export (for example `dev-council.py` wired straight into a workflow
+  instead of through the exporting `dev-council.sh`) must export in that same job, and cannot lean on a
+  runner it bypassed. `audit-export.sh` also derives the governed repo from the git remote when
+  `GITHUB_REPOSITORY` is unset, so its "never export into the repo you govern" refusal holds on host runs,
+  not only in CI.
 - **`doctor` and `setup` warn when the reviewer is a heavy reasoning model.** A reasoning model reasons at
   length and can exceed a hosted inference window on a real code diff, so the review times out and posts no
   lenses while trivial or docs-only diffs still pass and look fine. The preflight and the setup wizard now

@@ -77,4 +77,19 @@ printf 'audit:\n  sink: none\n' > "$RC/none.yml"
 out="$(python3 "$DOC" "$RC/none.yml" 2>&1)"
 grep -qi "no export route" <<<"$out" && bad "completeness warned on sink none" || ok "completeness is moot on sink none"
 
+# The workflow surface is stricter: a CI job that runs a recorder which does not self-export must export in
+# that same job. A workflow that wires dev-council.py directly, bypassing the exporting dev-council.sh
+# runner, drops the produce trail, and the sibling-runner escape must NOT hide it (the gap a real deployment
+# hit). With an in-job export step the same workflow is clean.
+WF="$TMP/wf"; mkdir -p "$WF/.github/workflows"
+printf 'audit:\n  sink: repo\n  sink_repo: acme/ledger\n' > "$WF/.asdd.yml"
+printf 'name: council\njobs:\n  run:\n    steps:\n      - run: python3 cli/dev-council.py --change x\n' > "$WF/.github/workflows/dev-council.yml"
+out="$(python3 "$DOC" "$WF/.asdd.yml" 2>&1)"
+grep -qi "records but has no export" <<<"$out" && grep -q "dev-council.yml" <<<"$out" \
+  && ok "a workflow running dev-council.py with no in-job export is flagged" || bad "workflow-surface recorder not flagged"
+printf 'name: council\njobs:\n  run:\n    steps:\n      - run: python3 cli/dev-council.py --change x\n      - run: bash .github/asdd/audit-export.sh .asdd-work/audit.jsonl\n' > "$WF/.github/workflows/dev-council.yml"
+out="$(python3 "$DOC" "$WF/.asdd.yml" 2>&1)"
+grep -q "dev-council.yml" <<<"$out" && bad "workflow with an in-job export wrongly flagged" \
+  || ok "a workflow that exports in the same job is clean"
+
 [ "$fail" = "0" ] && { echo "doctor self-test: PASS"; exit 0; } || { echo "doctor self-test: FAIL"; exit 1; }
