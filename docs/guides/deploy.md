@@ -57,9 +57,11 @@ asdd init --goose /path/to/your-repo
 
 Or run `bash cli/init.sh --goose /path/to/your-repo` from a checkout.
 
-This writes the constitution (`AGENTS.md`), `.asdd.yml`, the PR template and `CODEOWNERS`, the lane
-labels, and the operate kit (recipes, the deterministic gates, the `asdd-gates` MCP, the operate-agent
-guard, the docsync workflow). Details: [adopt the govern layer](adopt-govern.md) and
+This writes the constitution (`AGENTS.md`) and a pointer to it for the common assistants (`CLAUDE.md`,
+`.cursor/rules/asdd.mdc`; Codex reads `AGENTS.md` directly), `.asdd.yml`, the PR template and `CODEOWNERS`,
+the lane labels, and the operate kit (recipes, the deterministic gates, the `asdd-gates` MCP, the
+operate-agent guard, the docsync workflow). A pointer is skipped if the file already exists. Details:
+[adopt the govern layer](adopt-govern.md), [bring your own developer](bring-your-own-developer.md), and
 [operate with Goose](operate-goose.md).
 
 ## 3. Turn the gates on (govern)
