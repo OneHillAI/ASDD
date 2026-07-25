@@ -99,6 +99,10 @@ if bash "$ROOT/cli/init.sh" "$P" >/dev/null 2>&1; then
   for a in review-code review-security review-spec review-impact review-quality; do
     [ -f "$P/.github/asdd/agents/$a.md" ] || { echo "FAIL: plain init did not copy the $a lens doc the runtime runs"; fail=1; }
   done
+  # The deterministic preflight gate is a workflow+script pair like the others: both must land, or the
+  # copied asdd-preflight.yml calls a preflight.sh that is not there.
+  [ -f "$P/.github/workflows/asdd-preflight.yml" ] || { echo "FAIL: plain init did not copy asdd-preflight.yml"; fail=1; }
+  [ -f "$P/.github/asdd/preflight.sh" ] || { echo "FAIL: plain init copied the preflight workflow but not preflight.sh it calls"; fail=1; }
 else
   echo "FAIL: plain init exited non-zero"; fail=1
 fi

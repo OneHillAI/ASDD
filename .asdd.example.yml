@@ -101,6 +101,9 @@ protected_paths:
 #   style:
 #     spelling: british
 #     banned_chars: ["–", "—"]      # en dash, em dash - checked on ADDED lines only
+#   # Your project's own test/lint/type command. The asdd-preflight.yml workflow RUNS this on every PR as
+#   # a deterministic, blocking gate (distinct from the model test agent), so a regression the review missed
+#   # is caught by the real suite. Make it a required check. Unset => the gate is an opt-in no-op.
 #   preflight: "ruff check . && ruff format --check . && mypy pkg && pytest -n 4"
 #   exemplars:                                # merged PRs that exemplify house style, cheaper than prose
 #     - "https://github.com/OWNER/REPO/pull/123"

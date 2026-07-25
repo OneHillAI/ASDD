@@ -128,10 +128,10 @@ step "5. The gates (intake + review pipeline) + the dashboard"
 # This IS the reference implementation. It lives in this repo's own .github/, so an adopter gets exactly
 # what ASDD runs on itself: the deterministic intake gate, and the model review pipeline (dry-run until a
 # model is wired). Read-only analysis is split from the write-scoped publish job (the security invariant).
-for w in asdd-intake.yml asdd-intake-feedback.yml pr-review.yml pr-review-publish.yml; do
+for w in asdd-intake.yml asdd-intake-feedback.yml pr-review.yml pr-review-publish.yml asdd-preflight.yml; do
   copy "$SELF/.github/workflows/$w" "$TARGET/.github/workflows/$w"
 done
-for s in intake-check.sh owner-override.sh run-review.sh post-review.sh policy-check.sh set-status.sh security_scan.py audit-export.sh; do
+for s in intake-check.sh owner-override.sh run-review.sh post-review.sh policy-check.sh set-status.sh security_scan.py audit-export.sh preflight.sh; do
   copy "$SELF/.github/asdd/$s" "$TARGET/.github/asdd/$s"
 done
 for r in generic.sh openai-compat.sh extract-json.py; do
