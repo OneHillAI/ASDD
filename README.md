@@ -87,9 +87,9 @@ The intake gate runs on the next pull request immediately. The review runs in a 
 
 Any OpenAI-compatible provider works. The analysis job holds `contents: read` only; the write scope stays in the publish job, which never reads untrusted PR content. That split is the security invariant, do not merge the two jobs.
 
-### 3. From a coding assistant
+### 3. Develop from your coding assistant
 
-The same steps are slash commands: [`/asdd:setup`, `/asdd:spec`, `/asdd:review`, `/asdd:status`](docs/guides/slash-commands.md). They are thin prompts over the CLI, so they port to any assistant. The CLI also runs the deterministic gates locally and a read-only [dashboard](docs/guides/governance-dashboard.md); a spec that passes locally passes on the PR, because it is the same code.
+`init` writes a pointer for the common assistants (`CLAUDE.md` for Claude Code and the Claude app, `.cursor/rules/asdd.mdc` for Cursor, and `AGENTS.md` for Codex and any tool that follows the AGENTS.md convention), so whatever you bring reads the contribution constitution with no extra setup. From there the workflow is a set of slash commands: [`/asdd:setup`, `/asdd:spec`, `/asdd:review`, `/asdd:status`](docs/guides/slash-commands.md), thin prompts over the CLI that port to any assistant. You do not have to be an engineer to start: describe the change to the spec agent in plain language and it drafts the spec the pipeline needs. The CLI also runs the deterministic gates and a read-only [dashboard](docs/guides/governance-dashboard.md) locally; a spec that passes locally passes on the PR, because it is the same code. See [bring your own developer](docs/guides/bring-your-own-developer.md).
 
 ## Bring your own assistant, and your own spec tool
 
@@ -107,7 +107,7 @@ Two things make it work. **Your conventions are declared, and the agents are hel
 
 ## Running the operate layer with Goose
 
-`init` above wires the **govern** layer (the CI gates). The **operate** layer, the agents that do the work, is optional and runtime-neutral: implement the contract in [`agents/runtime.md`](agents/runtime.md) on your own harness, or use the ready-to-run kit for unmodified [Goose](https://block.github.io/goose/).
+`init` above wires the **govern** layer (the CI gates). The **operate** layer, the agents that do the work, is optional and runtime-neutral: implement the contract in [`agents/runtime.md`](agents/runtime.md) on your own harness, or use the ready-to-run kit for unmodified [Goose](https://block.github.io/goose/), which is open source and free to run. You bring an API key for a model; you do not buy the harness.
 
 > **Status: alpha.** The Goose operate kit is usable and dogfooded, but its recipes and interfaces may still change.
 

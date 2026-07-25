@@ -78,6 +78,12 @@ echo "ASDD - scaffolding governance into: $TARGET"
 step "1. Constitution (AGENTS.md)"
 copy "$SELF/AGENTS.md" "$TARGET/AGENTS.md"
 say "edit the sections marked (adapt); keep the (fixed) ones."
+# Editor pointers: the developer is bring-your-own, so hand the common assistants the constitution the way
+# each one loads context. Thin pointers to AGENTS.md; skip-if-exists never clobbers an existing rule file.
+# Codex and other AGENTS.md-convention tools read AGENTS.md directly, so they need no separate pointer.
+copy "$SELF/cli/templates/editors/CLAUDE.md" "$TARGET/CLAUDE.md"
+copy "$SELF/cli/templates/editors/cursor-asdd.mdc" "$TARGET/.cursor/rules/asdd.mdc"
+say "a contributor's Claude Code / Cursor / Codex picks up AGENTS.md automatically (docs/guides/bring-your-own-developer.md)."
 
 step "2. Config (.asdd.yml)"
 # Rewrite the example's 3-line header so the generated config reads as this repo's

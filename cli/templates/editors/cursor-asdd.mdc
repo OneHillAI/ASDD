@@ -1,0 +1,15 @@
+---
+description: ASDD contribution rules for this repository
+alwaysApply: true
+---
+
+This repository is governed by ASDD (Agentic Spec-Driven Development). Read AGENTS.md, the contribution
+constitution, before writing code here. These points are a pointer to it, not a second set of rules.
+
+- Disclose the agent in the pull request and the commit trailer, and sign every commit off (`git commit -s`).
+- Exactly one lane label per pull request; the set is in `.asdd.yml`.
+- A feature or fix points to a spec that defines "done"; only the `chore` lane is spec-exempt.
+- You are the developer. The test agents run on a different model, so your own tests are not the deciding check.
+- A human merges. Agents review and recommend; you do not merge your own work.
+
+Full guide: docs/guides/bring-your-own-developer.md
