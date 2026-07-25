@@ -162,6 +162,7 @@ Use `--no-ping` for a network-free config-completeness check.
 ```bash
 asdd connect-check              # ping every role (+ the council if configured)
 asdd connect-check --no-ping    # "is the runtime configured?" without a model call
+asdd connect-check --json       # the same per-role result as JSON, for a setup script or CI to gate on
 ```
 
 ## kit-check
@@ -412,7 +413,10 @@ With no model wired it prints a labelled dry run. The Goose kit ships the runner
 
 `asdd doctor [CONFIG]` preflights the operate path before you rely on it. It checks Python, Goose, the
 selected spec CLI, the roster's heterogeneity rule, the runtime key, the declared conventions and the
-recipes, reporting each as OK, a warning, or a blocking issue with the exact next step.
+recipes, reporting each as OK, a warning, or a blocking issue with the exact next step. It also warns on
+the setup traps that pass silently: a git identity that is not set (a contributor's commits could not be
+signed off), a reviewer that is a heavy reasoning model (it can time out on a real diff), and, when an
+audit sink is configured, any record-writing path or CI job with no export route.
 
 The part worth knowing: it tells **"not installed"** apart from **"installed but not on your PATH"**. A
 plain `which` reports the second as the first, which sends people reinstalling a tool they already have.
