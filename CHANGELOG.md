@@ -7,6 +7,13 @@ draft, so pin a conformance claim to a commit or date.
 ## [Unreleased]
 
 ### Added
+- **Editor pointers for a bring-your-own developer.** `init` now writes a thin pointer for the common
+  coding assistants (`CLAUDE.md` for Claude Code and the Claude app, `.cursor/rules/asdd.mdc` for Cursor;
+  Codex and other AGENTS.md-convention tools read `AGENTS.md` directly), so a contributor's assistant loads
+  the contribution constitution with no manual setup. Each pointer references `AGENTS.md` and is skipped if
+  the file already exists, so an existing rule file is never overwritten. A new guide,
+  [bring your own developer](docs/guides/bring-your-own-developer.md), covers the non-engineer spec path
+  and that the operate agents run on open-source Goose.
 - **`doctor` and `setup` warn when the reviewer is a heavy reasoning model.** A reasoning model reasons at
   length and can exceed a hosted inference window on a real code diff, so the review times out and posts no
   lenses while trivial or docs-only diffs still pass and look fine. The preflight and the setup wizard now

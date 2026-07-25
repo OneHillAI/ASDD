@@ -99,6 +99,16 @@ if bash "$ROOT/cli/init.sh" "$P" >/dev/null 2>&1; then
   for a in review-code review-security review-spec review-impact review-quality; do
     [ -f "$P/.github/asdd/agents/$a.md" ] || { echo "FAIL: plain init did not copy the $a lens doc the runtime runs"; fail=1; }
   done
+  # Editor pointers ship in base (the developer is bring-your-own in every profile): the common assistants
+  # must find AGENTS.md through the pointer for their tool, and each pointer must actually reference it.
+  [ -f "$P/CLAUDE.md" ] || { echo "FAIL: plain init did not write the CLAUDE.md pointer"; fail=1; }
+  [ -f "$P/.cursor/rules/asdd.mdc" ] || { echo "FAIL: plain init did not write the Cursor rule pointer"; fail=1; }
+  grep -q 'AGENTS.md' "$P/CLAUDE.md" || { echo "FAIL: CLAUDE.md pointer does not reference AGENTS.md"; fail=1; }
+  grep -q 'AGENTS.md' "$P/.cursor/rules/asdd.mdc" || { echo "FAIL: Cursor pointer does not reference AGENTS.md"; fail=1; }
+  # skip-if-exists must never clobber a contributor's own rule file.
+  echo "MINE" > "$P/CLAUDE.md"
+  bash "$ROOT/cli/init.sh" "$P" >/dev/null 2>&1
+  grep -qx "MINE" "$P/CLAUDE.md" || { echo "FAIL: init overwrote an existing CLAUDE.md"; fail=1; }
 else
   echo "FAIL: plain init exited non-zero"; fail=1
 fi
