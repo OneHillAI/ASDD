@@ -32,6 +32,12 @@ CHECKS = [
      "zero", "the advisory comment is a public artefact and must meet the writing standard"),
     ("audit-log properties (P1-P6, P9)",        ["sh", "validation/audit-check.test.sh"],
      "zero", "for-all invariants over the audit trail"),
+    ("audit-export refusals + host derivation",  ["bash", ".github/asdd/audit-export.test.sh"],
+     "zero", "the sink refuses the governed repo (deriving it from the git remote on a host run, not only "
+             "in CI), a public sink, and a broken chain, so the trail cannot leak"),
+    ("operate runners leave + export a trail",   ["bash", ".github/asdd/operate/runner-trail.test.sh"],
+     "zero", "test/docsync record on every exit (dry-run, refusal, real run) and export only when a sink "
+             "credential is present, so no run is invisible and a tokenless run never tries to push"),
     ("operate-run deterministic emission",      ["bash", "cli/operate-run.test.sh"],
      "zero", "the run wrapper emits exactly one record even when the agent run produced nothing, so a "
              "provider timeout mid-run cannot silently lose the action"),

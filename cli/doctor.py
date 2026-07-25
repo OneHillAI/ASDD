@@ -21,6 +21,7 @@ Zero-dependency (stdlib).
 """
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -242,6 +243,89 @@ def check_reviewer_reasoning(rep, config):
                 "per-call timeout will otherwise fail fast and name this cause")
 
 
+def _audit_sink(config):
+    """The audit.sink value (none|repo|command) from .asdd.yml, or None if no audit block."""
+    inblk = False
+    try:
+        with open(config) as fh:
+            for line in fh:
+                s = line.split("#", 1)[0].rstrip()
+                if s.strip() == "audit:":
+                    inblk = True
+                    continue
+                if inblk:
+                    if s and not s[0].isspace():
+                        break
+                    t = s.strip()
+                    if t.startswith("sink:"):
+                        return t[len("sink:"):].strip().strip('"').strip("'")
+    except OSError:
+        return None
+    return None
+
+
+def check_audit_export_completeness(rep, config):
+    """When a sink is configured, every path that RECORDS must also EXPORT, or its trail is silently
+    dropped. Enumerate the record-writers dynamically (a NEW recorder added later with no export is then
+    caught, instead of a hardcoded list going stale), and WARN on any with no export route. A shared library
+    recorder is covered when its own file calls audit-export or a runner that invokes it by name does. A CI
+    workflow is held to a stricter rule: because the sink credential lives in the job, a workflow that runs a
+    non-self-exporting recorder must export in that same job, not lean on a runner it bypassed."""
+    sink = _audit_sink(config)
+    if not sink or sink == "none":
+        return  # opting in is required; with no sink there is nothing to export.
+    root = os.path.dirname(os.path.abspath(config)) or "."
+    dirs = [os.path.join(root, "cli"), os.path.join(root, ".github", "asdd")]
+    rec_re = re.compile(r"audit\.py\s+(append|from-review)|from_review|audit\.py['\"]?\s*,\s*['\"]?append")
+    files = []
+    for d in dirs:
+        for dp, _sub, fs in os.walk(d) if os.path.isdir(d) else []:
+            for f in fs:
+                if f.endswith((".sh", ".py", ".yml")) and not f.endswith((".test.sh", ".test.py")):
+                    files.append(os.path.join(dp, f))
+    texts = {f: _read(f) for f in files}
+    exporters = " ".join(os.path.basename(f) for f, t in texts.items() if "audit-export" in t)
+    missing = []
+    for f, t in texts.items():
+        if not rec_re.search(t):
+            continue
+        if "audit-export" in t or os.path.basename(f) in exporters:
+            continue  # exports itself, or a runner/workflow that names it exports.
+        missing.append(os.path.relpath(f, root))
+
+    # The workflow surface has a stricter rule than a shared library file. A CI job is where the sink
+    # credential lives, so a workflow that runs a recorder which does not itself export MUST export in that
+    # same job; it cannot lean on a sibling runner it bypassed. A deployment that wires dev-council.py (or a
+    # raw audit.py append) straight into a workflow, instead of through the exporting dev-council.sh runner,
+    # would otherwise drop the produce trail with the sibling-runner escape hiding it. Match that case by
+    # its own file, not by a runner that names the tool.
+    wf_dir = os.path.join(root, ".github", "workflows")
+    wf_rec_re = re.compile(r"dev-council\.py|audit\.py\s+(append|from-review)")
+    for dp, _sub, fs in os.walk(wf_dir) if os.path.isdir(wf_dir) else []:
+        for f in fs:
+            if not f.endswith((".yml", ".yaml")):
+                continue
+            p = os.path.join(dp, f)
+            if wf_rec_re.search(_read(p)) and "audit-export" not in _read(p):
+                missing.append(os.path.relpath(p, root))
+    if missing:
+        rep.add(WARN, "an agent records but has no export route",
+                "sink is '" + sink + "', but these record to the ledger with no export step, so their "
+                "trail is dropped: " + ", ".join(sorted(missing)),
+                "add an audit-export.sh call at the end of the runner (trusted context), or a publish job "
+                "that exports, so the produce and support trails reach the sink like the review's")
+    else:
+        rep.add(OK, "audit export completeness", "every record-writing path has an export route")
+
+
+def _read(path):
+    try:
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            return fh.read()
+    except OSError:
+        return ""
+
+
 def main():
     ap = argparse.ArgumentParser(description="Preflight the ASDD Goose operate path.")
     ap.add_argument("config", nargs="?", default=".asdd.yml",
@@ -261,6 +345,7 @@ def main():
     check_spec_tool(rep, a.config)
     check_roster(rep, a.config)
     check_reviewer_reasoning(rep, a.config)
+    check_audit_export_completeness(rep, a.config)
     check_conventions(rep, a.config)
     check_runtime_key(rep)
     check_recipes(rep, a.config)

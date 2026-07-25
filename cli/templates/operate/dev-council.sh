@@ -15,4 +15,13 @@ ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"   # .github/asdd/operate/ -> repo
 CHANGE="${1:-}"
 [ -n "$CHANGE" ] || { echo "usage: dev-council.sh <openspec-change-id> [args...]" >&2; exit 2; }
 shift || true
-exec python3 "$ROOT/cli/dev-council.py" --change "$CHANGE" --root "$ROOT" "$@"
+python3 "$ROOT/cli/dev-council.py" --change "$CHANGE" --root "$ROOT" "$@"
+rc=$?
+# The council records its trail (dev-council.py: role developer, action dev-council.*). Ship it to the
+# adopter's sink if one is wired, like every other agent - host-run, trusted context, so holding the sink
+# credential here is safe (audit-export no-ops on sink:none and refuses a public or same-repo sink). Same
+# ledger expression the council writes to, and the council's own exit code is preserved.
+LEDGER="${ASDD_ACTIVITY_LOG:-.asdd-work/audit.jsonl}"
+[ -n "${AUDIT_SINK_TOKEN:-}" ] && [ -x "$ROOT/.github/asdd/audit-export.sh" ] \
+  && bash "$ROOT/.github/asdd/audit-export.sh" "$LEDGER" >/dev/null 2>&1 || true
+exit "$rc"
