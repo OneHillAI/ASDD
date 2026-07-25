@@ -1,0 +1,32 @@
+# ASDD preflight - the deterministic test gate.
+#
+# Runs the adopter's OWN test/lint/type command (conventions.preflight in .asdd.yml) on every PR, so a
+# regression the model review missed is still caught by the real suite. This is DISTINCT from the model
+# test-runner agent (asdd-test.yml, which judges post-merge with a model): here the deterministic suite's
+# exit status IS the gate. Make it a required check in branch protection to block a red suite from merging.
+#
+# It holds NO secrets (contents: read only), so executing the change's own tests on a PR cannot exfiltrate;
+# a fork PR still needs the maintainer's fork-workflow approval before it runs at all. It is a no-op that
+# passes until conventions.preflight is set, so installing it is safe before a project wires its suite.
+name: ASDD preflight
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asdd-preflight-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preflight:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the change (the PR merged into its base)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Run the project's deterministic preflight
+        run: bash .github/asdd/preflight.sh

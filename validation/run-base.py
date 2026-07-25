@@ -77,6 +77,9 @@ CHECKS = [
      "zero", "PRs bucketed by governance stage + releases + contributors into a self-contained HTML page"),
     ("operate-agent security guard",            ["sh", "cli/operate-guard.test.sh"],
      "zero", "a tool-using recipe is refused on untrusted input; execution-free is allowed"),
+    ("deterministic preflight gate (F2)",       ["bash", ".github/asdd/preflight.test.sh"],
+     "zero", "the adopter's own test/lint/type command runs as a real blocking gate: a passing suite "
+             "passes, a broken test fails the check, and an unconfigured preflight is an opt-in no-op"),
     ("host conventions gate (brownfield)",      ["bash", "cli/conventions-check.test.sh"],
      "zero", "agent output is held to the host project's DECLARED conventions, judging only the change "
              "and checking style on added lines only, so a mature repo can adopt and ratchet"),

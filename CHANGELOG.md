@@ -7,6 +7,12 @@ draft, so pin a conformance claim to a commit or date.
 ## [Unreleased]
 
 ### Added
+- **A deterministic preflight gate runs the project's real test suite.** `conventions.preflight` (the
+  adopter's own `ruff`/`pytest`/`mypy` command) was declared and surfaced to the agents but never actually
+  run. The new `asdd-preflight.yml` workflow runs it on every PR through `.github/asdd/preflight.sh`, so a
+  regression the model review missed is still caught by the real suite; its exit status is the gate. It is
+  distinct from the model test-runner agent, holds no secrets, and is an opt-in no-op until the command is
+  set. A spec-and-test framework should run the tests, not only reason about them.
 - **`doctor` and `setup` warn when the reviewer is a heavy reasoning model.** A reasoning model reasons at
   length and can exceed a hosted inference window on a real code diff, so the review times out and posts no
   lenses while trivial or docs-only diffs still pass and look fine. The preflight and the setup wizard now
