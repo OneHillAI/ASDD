@@ -19,6 +19,21 @@ OUT="${2:?test: out file required}"
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 RECIPE="$REPO_ROOT/recipes/test-runner.yaml"
 
+# Leave a trail on ANY exit path (a real run, a dry run with no model, or a guard refusal), so this agent
+# is never invisible to the ledger and the corpus as it was before. Record the run, then in this trusted
+# post-merge context ship it to the sink if one is wired (audit-export no-ops on sink:none and refuses a
+# public or same-repo sink). Neither step fails the run.
+_trail() {
+  local led="${ASDD_ACTIVITY_LOG:-.asdd-work/audit.jsonl}" v=completed
+  [ -f "$OUT" ] && grep -qi 'dry run' "$OUT" 2>/dev/null && v=dry-run
+  python3 "$REPO_ROOT/cli/audit.py" append --ledger "$led" --role test-runner --action test.run \
+    --authorizing-decision "post-merge test agent (trusted)" --verdict "$v" \
+    --reasoning "test agent ran on ${CHANGE_REF}" >/dev/null 2>&1 || true
+  [ -n "${AUDIT_SINK_TOKEN:-}" ] && [ -x "$REPO_ROOT/.github/asdd/audit-export.sh" ] \
+    && bash "$REPO_ROOT/.github/asdd/audit-export.sh" "$led" >/dev/null 2>&1 || true
+}
+trap _trail EXIT
+
 # Enforce the operate-agent security classification. This runner is post-merge (trusted), but assert it
 # so the rule is mechanical: a tool-using recipe is refused on untrusted input (see cli/operate-guard.py).
 # This is the guard that keeps the tester off untrusted pre-merge PR content.

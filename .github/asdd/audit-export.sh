@@ -38,6 +38,15 @@ yaml_in() {
 }
 
 SINK="$(yaml_in sink)"; SINK="${SINK:-none}"
+# The same-repo refusal below (and the commit message) need the governed repo's name. CI sets
+# GITHUB_REPOSITORY; a host produce or council run does NOT, which would SILENTLY SKIP the same-repo
+# refusal. Derive it from the git remote when unset, so the refusal is enforced everywhere - CI and host -
+# with no per-caller wiring (the same anti-miss philosophy as exporting from the wrapper).
+if [ -z "${GITHUB_REPOSITORY:-}" ]; then
+  GITHUB_REPOSITORY="$(git -C "$ROOT" config --get remote.origin.url 2>/dev/null \
+    | sed -E 's#(git@|https?://)[^/:]+[/:]##; s#\.git$##')"
+fi
+
 SINK_REPO="$(yaml_in sink_repo)"
 SINK_CMD="$(yaml_in sink_command)"
 

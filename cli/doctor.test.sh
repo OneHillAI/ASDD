@@ -65,4 +65,16 @@ out="$(python3 "$DOC" "$TMP/fast.yml" 2>&1)"
 grep -qi 'reasoning model' <<<"$out" && bad "fast reviewer wrongly warned" \
   || ok "fast reviewer does not trigger the reasoning warn"
 
+# Dynamic audit-export completeness: a sink configured + a recorder with no export route must WARN and name
+# the file (the anti-miss guard); with no sink it is moot and silent.
+RC="$TMP/reco"; mkdir -p "$RC/cli" "$RC/.github/asdd"
+printf 'audit:\n  sink: repo\n  sink_repo: acme/ledger\n' > "$RC/.asdd.yml"
+printf '#!/usr/bin/env bash\npython3 cli/audit.py append --role triage --action x\n' > "$RC/.github/asdd/rogue.sh"
+out="$(python3 "$DOC" "$RC/.asdd.yml" 2>&1)"
+grep -qi "records but has no export" <<<"$out" && grep -q "rogue.sh" <<<"$out" \
+  && ok "audit-export completeness flags an unexported recorder" || bad "completeness check missed a rogue recorder"
+printf 'audit:\n  sink: none\n' > "$RC/none.yml"
+out="$(python3 "$DOC" "$RC/none.yml" 2>&1)"
+grep -qi "no export route" <<<"$out" && bad "completeness warned on sink none" || ok "completeness is moot on sink none"
+
 [ "$fail" = "0" ] && { echo "doctor self-test: PASS"; exit 0; } || { echo "doctor self-test: FAIL"; exit 1; }

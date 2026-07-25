@@ -7,6 +7,15 @@ draft, so pin a conformance claim to a commit or date.
 ## [Unreleased]
 
 ### Added
+- **The audit trail is complete: every agent's records reach the sink, not only the reviewer's.** Before,
+  only the review exported, so a deployment that turned on `audit.sink` captured the reviewer's decisions
+  but lost the produce side (the developer/council "coding"), the test and documentation agents, and the
+  operator agents. Now every path records through one route and exports from a credential-safe point (the
+  produce wrapper, the runners, the council), the untrusted PR review keeps its record/publish split, and
+  `doctor` runs a **dynamic completeness check** that enumerates every record-writing path and warns on any
+  with no export route, so a new agent added later cannot silently drop its trail. `audit-export.sh` also
+  derives the governed repo from the git remote when `GITHUB_REPOSITORY` is unset, so its "never export
+  into the repo you govern" refusal holds on host runs, not only in CI.
 - **`doctor` and `setup` warn when the reviewer is a heavy reasoning model.** A reasoning model reasons at
   length and can exceed a hosted inference window on a real code diff, so the review times out and posts no
   lenses while trivial or docs-only diffs still pass and look fine. The preflight and the setup wizard now

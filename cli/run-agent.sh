@@ -97,6 +97,11 @@ emit_record() {
     --role "$ROLE" --action "agent.$AGENT.run" \
     --authorizing-decision "operator-run (advisory; a human acts on the output)" \
     --verdict "$1" --reasoning "operator ran the $AGENT agent on $INPUT ($2)" >/dev/null 2>&1 || true
+  # Trusted operator-run context: ship the trail to the adopter's sink if one is wired. audit-export.sh
+  # no-ops on sink:none and refuses a public or same-repo sink, so this cannot leak; never fails the run.
+  local led="${ASDD_ACTIVITY_LOG:-.asdd-work/audit.jsonl}"
+  [ -n "${AUDIT_SINK_TOKEN:-}" ] && [ -x "$ROOT/.github/asdd/audit-export.sh" ] \
+    && bash "$ROOT/.github/asdd/audit-export.sh" "$led" >/dev/null 2>&1 || true
 }
 
 # Default to the bundled OpenAI-compatible model command when an endpoint is configured.

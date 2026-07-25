@@ -31,6 +31,7 @@ import sys
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 AUDIT = os.path.join(HERE, "audit.py")
+EXPORT = os.path.normpath(os.path.join(HERE, "..", ".github", "asdd", "audit-export.sh"))
 
 # The valid audit roles, from the ledger itself, so the wrapper refuses a bad role BEFORE running a whole
 # agent only to be unable to record it. A record that cannot be written is exactly the loss this exists to
@@ -89,6 +90,21 @@ def emit(role, ledger, instructed_by, result, goose_exit):
     return rc == 0
 
 
+def export_if_configured(ledger):
+    """Ship the just-written trail to the adopter's sink when a sink credential is present. The wrapper
+    runs in a TRUSTED context (the operator's own produce loop, or a post-merge job), so holding the sink
+    credential here is safe, unlike the untrusted PR review which keeps record and export in separate jobs.
+    audit-export.sh is itself a no-op when audit.sink is none and refuses a public or same-repo sink, so
+    calling it whenever a token is present cannot leak. No token means no sink is wired for this run; skip
+    quietly. Never fails the run: an export problem must not cost the operator their agent's outcome."""
+    if not os.environ.get("AUDIT_SINK_TOKEN") or not os.path.isfile(EXPORT):
+        return
+    try:
+        subprocess.run(["bash", EXPORT, ledger], check=False)
+    except Exception:
+        sys.stderr.write("operate-run: WARNING audit export failed; the record was still written.\n")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Run a Goose operate agent and record it deterministically.")
     ap.add_argument("--role", required=True, help="the operate role (test-runner, documentation, ...)")
@@ -141,6 +157,7 @@ def main():
     ok = emit(a.role, a.ledger, a.instructed_by, result, goose_exit)
     if not ok:
         sys.stderr.write("operate-run: WARNING the audit record could not be written.\n")
+    export_if_configured(a.ledger)
     kind = "rich" if result else "minimal (no structured result)"
     sys.stderr.write(f"operate-run: {a.role} recorded ({kind}); goose exit {goose_exit}.\n")
     # Surface the run's real outcome to the caller (CI, a human), not the emit's.

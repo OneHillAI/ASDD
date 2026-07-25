@@ -34,6 +34,16 @@ out="$(run_with_cfg 'audit:
 echo "$out" | grep -q "repository being governed" && echo "ok: refuses the governed repo as sink" \
   || { echo "FAIL: should refuse the governed repo (got: $out)"; fail=1; }
 
+# 2b. On a HOST run (GITHUB_REPOSITORY unset), the governed repo is derived from the git remote, so the
+#     same-repo refusal holds off-CI too instead of being silently skipped.
+d="$TMP/hostrepo"; rm -rf "$d"; mkdir -p "$d/.github/asdd" "$d/cli"
+cp "$EX" "$d/.github/asdd/audit-export.sh"; cp "$ROOT/cli/audit.py" "$d/cli/audit.py"
+( cd "$d" && git init -q && git remote add origin https://github.com/acme/project.git ) >/dev/null 2>&1
+printf 'audit:\n  sink: repo\n  sink_repo: acme/project\n' > "$d/.asdd.yml"
+out="$(env -u GITHUB_REPOSITORY bash "$d/.github/asdd/audit-export.sh" "$L" 2>&1)"
+echo "$out" | grep -q "repository being governed" && echo "ok: derives the governed repo from the git remote on a host run" \
+  || { echo "FAIL: host-run same-repo refusal not enforced (got: $out)"; fail=1; }
+
 # 3. Unverifiable visibility fails closed (no token -> cannot prove it is private).
 out="$(run_with_cfg 'audit:
   sink: repo

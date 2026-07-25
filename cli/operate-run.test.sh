@@ -58,4 +58,17 @@ python3 "$OR" --role test-runner --recipe /dev/null --ledger "$TMP/d.jsonl" --sk
 python3 "$OR" --role not-a-role --recipe /dev/null --ledger "$TMP/e.jsonl" --skip-goose >/dev/null 2>&1
 [ "$?" = "2" ] && ok "an unknown role is rejected up front" || bad "unknown role not rejected"
 
+# 8. Export by trust class: with a sink credential present the wrapper ships the trail (trusted context);
+#    with none it does not. A throwaway repo layout so operate-run.py resolves a STUB audit-export.sh.
+R="$TMP/repo"; mkdir -p "$R/cli" "$R/.github/asdd"
+cp "$OR" "$R/cli/operate-run.py"; cp "$(dirname "$OR")/audit.py" "$R/cli/audit.py"
+printf '#!/usr/bin/env bash\necho "called $1" >> "%s/exp.log"\n' "$TMP" > "$R/.github/asdd/audit-export.sh"
+chmod +x "$R/.github/asdd/audit-export.sh"
+echo '{"action":"test-runner.run","verdict":"ok","reasoning":"x"}' > "$R/res.json"
+( cd "$R" && AUDIT_SINK_TOKEN=x python3 cli/operate-run.py --role test-runner --recipe /dev/null --skip-goose --result res.json --ledger "$R/l.jsonl" >/dev/null 2>&1 )
+[ -f "$TMP/exp.log" ] && ok "a sink credential triggers the export step" || bad "export not called with a token"
+rm -f "$TMP/exp.log"
+( cd "$R" && python3 cli/operate-run.py --role test-runner --recipe /dev/null --skip-goose --result res.json --ledger "$R/l2.jsonl" >/dev/null 2>&1 )
+[ -f "$TMP/exp.log" ] && bad "export called without a token" || ok "no export without a sink credential"
+
 [ "$fail" = "0" ] && { echo "operate-run self-test: PASS"; exit 0; } || { echo "operate-run self-test: FAIL"; exit 1; }
