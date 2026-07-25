@@ -7,6 +7,15 @@ draft, so pin a conformance claim to a commit or date.
 ## [Unreleased]
 
 ### Added
+- **`doctor` warns when the git identity is unset.** A contributor whose `user.name` / `user.email` are
+  not set produces commits that cannot be signed off or attributed, so intake rejects them after the work
+  is done. The preflight now flags this up front, as a warning, so it is fixed before the first commit.
+- **`connect-check --json` for tooling and CI.** The per-role connected/dry-run status is now available as
+  machine-readable JSON with the same accounting and exit code as the human output, so a setup script or
+  pipeline can gate on it without scraping text.
+- **Intake warns when a `chore` change authors a spec.** The `chore` lane is spec-exempt, so a change that
+  adds or edits a spec while labelled `chore` is almost certainly a mislabelled feature or fix. Intake now
+  surfaces this as a non-failing warning (the change still passes) so the lane can be corrected.
 - **`doctor` and `setup` warn when the reviewer is a heavy reasoning model.** A reasoning model reasons at
   length and can exceed a hosted inference window on a real code diff, so the review times out and posts no
   lenses while trivial or docs-only diffs still pass and look fine. The preflight and the setup wizard now

@@ -105,6 +105,30 @@ case_run "a renamed-to spec counts (R status, new path is \$NF)" \
 case_run "a chore PR skips the spec requirement" \
   asdd-default.yml 'chore' "$DISC" "$(printf 'M\tsrc/a.py\n')" true true
 
+# Lane hygiene: a `chore` PR is spec-exempt, so authoring a spec inside it is self-contradictory (the
+# change is really a feature or fix). The gate still PASSES chore (spec is not required), but it must
+# surface a non-failing warning so the mislabelled lane is visible.
+fw="$TMP/w"; rm -rf "$fw"; mkdir -p "$fw"
+printf '%s' "$DISC" > "$fw/body.md"; printf 'chore' > "$fw/labels.txt"
+printf 'feat: a change\n\nSigned-off-by: A Dev <a@example.com>\0' > "$fw/commits.txt"
+printf 'A\tdocs/specs/new.md\n' > "$fw/changed.txt"
+printf 'pr_number=1\nhead_sha=abc123\nrequire_spec=true\n' > "$fw/meta.env"
+( cd "$TREE" && ASDD_CONFIG="asdd-default.yml" bash "$GATE" "$fw" "$fw/out.json" >/dev/null 2>&1 )
+if [ "$(jq -r '.passed' "$fw/out.json")" = "true" ] \
+   && jq -e '.warnings | map(select(startswith("Lane is "))) | length > 0' "$fw/out.json" >/dev/null; then
+  echo "  ok   a chore PR that adds a spec passes but warns the lane is mislabelled"
+else
+  echo "  FAIL chore+spec-delta: expected pass with a lane-hygiene warning"; fail=1
+fi
+# A chore with NO spec delta must carry no such warning (no false positive).
+printf 'M\tsrc/a.py\n' > "$fw/changed.txt"
+( cd "$TREE" && ASDD_CONFIG="asdd-default.yml" bash "$GATE" "$fw" "$fw/out.json" >/dev/null 2>&1 )
+if jq -e '.warnings | map(select(startswith("Lane is "))) | length == 0' "$fw/out.json" >/dev/null; then
+  echo "  ok   a chore with no spec delta carries no lane-hygiene warning"
+else
+  echo "  FAIL chore-without-spec should not warn"; fail=1
+fi
+
 # --- a foreign layout: OpenSpec -----------------------------------------------------------------------
 case_run "OpenSpec: adding a proposal satisfies the gate" \
   asdd-openspec.yml "$OK_LABELS" "$DISC" "$(printf 'A\topenspec/changes/add-auth/proposal.md\n')" true true

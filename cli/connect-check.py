@@ -129,6 +129,7 @@ def main():
     ap.add_argument("config", nargs="?", default=".asdd.yml")
     ap.add_argument("--role", action="append", default=[], help="check only these roster roles")
     ap.add_argument("--no-ping", action="store_true", help="report config completeness only; no model call")
+    ap.add_argument("--json", action="store_true", help="emit the per-role result as JSON for tooling/CI")
     a = ap.parse_args()
     if not os.path.isfile(a.config):
         sys.stderr.write(f"connect-check: no config at {a.config} (run `asdd init --goose` first).\n")
@@ -141,20 +142,29 @@ def main():
     if not a.role:
         checks += [(name, m, u, t) for name, m, u, t in council_members(a.config)]
 
-    print("asdd connect-check - are the agents connected, or dry-running?\n")
+    rows = []
     connected = configured = 0
     for name, model, url, token in checks:
         if not model and name.startswith("council"):
             continue
         configured += 1 if model else 0
         state, detail = classify(name, model, url, token, not a.no_ping)
-        mark = {"live": "LIVE ", "ready": "READY", "dry-run": "DRY  ", "error": "ERR  ",
-                "no-model": "-    "}[state]
         if state in ("live", "ready"):
             connected += 1
-        print(f"  [{mark}] {name:<14} {detail}")
-
+        rows.append({"role": name, "model": model, "state": state, "detail": detail,
+                     "connected": state in ("live", "ready")})
     live, total = connected, configured
+
+    if a.json:
+        print(json.dumps({"roles": rows, "connected": live, "configured": total,
+                          "all_connected": total > 0 and live == total, "pinged": not a.no_ping}))
+        return 0 if (total > 0 and live == total) else 1
+
+    print("asdd connect-check - are the agents connected, or dry-running?\n")
+    for r in rows:
+        mark = {"live": "LIVE ", "ready": "READY", "dry-run": "DRY  ", "error": "ERR  ",
+                "no-model": "-    "}[r["state"]]
+        print(f"  [{mark}] {r['role']:<14} {r['detail']}")
     print()
     if total == 0:
         print("No role has a model in the roster. Run `asdd setup` to assign models, then connect a runtime.")

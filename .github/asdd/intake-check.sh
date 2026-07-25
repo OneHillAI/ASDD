@@ -202,20 +202,37 @@ if [ "$overridden" = "true" ] && [ "${#problems[@]}" -gt 0 ]; then
   problems+=("Owner override in effect: the above are advisory only for this PR (owner-override label).")
 fi
 
+# Lane hygiene (advisory, never a failure): a `chore` PR (spec-exempt) that ADDS or edits a spec is
+# self-contradictory - a change that authors a spec is usually a feature or fix, not a chore, so the lane
+# is probably mislabelled. WARN so it surfaces; chore still passes.
+warnings=()
+if [ "$is_chore" = "true" ] && [ -f "$WORKDIR/changed.txt" ] && \
+   SPEC_RE="^(${spec_re})$" awk -F'\t' 'BEGIN{re=ENVIRON["SPEC_RE"]} $1 ~ /^[AMR]/ && $NF ~ re {f=1} END{exit f?0:1}' \
+     "$WORKDIR/changed.txt"; then
+  warnings+=("Lane is 'chore' (spec-exempt) but this change adds or edits a spec. A change that authors a spec is usually a feature or fix, not a chore; check the lane. Chore still passes intake.")
+fi
+
 # Emit intake JSON.
 if [ "${#problems[@]}" -gt 0 ]; then
   probs_json="$(printf '%s\n' "${problems[@]}" | jq -R . | jq -s 'map(select(length>0))')"
 else
   probs_json='[]'
 fi
+if [ "${#warnings[@]}" -gt 0 ]; then
+  warns_json="$(printf '%s\n' "${warnings[@]}" | jq -R . | jq -s 'map(select(length>0))')"
+else
+  warns_json='[]'
+fi
 jq -n \
   --argjson pr "${pr_number}" --arg head "${head_sha}" \
   --argjson disc "$disclosed" --argjson sign "$signed_off" --argjson lane "$laned" \
-  --argjson flood "$flood_ok" --argjson spec "$spec_ok" --argjson conv "$conv_ok" --argjson ovr "$overridden" --argjson probs "$probs_json" \
+  --argjson flood "$flood_ok" --argjson spec "$spec_ok" --argjson conv "$conv_ok" --argjson ovr "$overridden" \
+  --argjson probs "$probs_json" --argjson warns "$warns_json" \
   '{schema:"asdd/intake/v0.1", pr_number:$pr, head_sha:$head,
     disclosed:$disc, signed_off:$sign, laned:$lane, flood_ok:$flood, spec_ok:$spec, conventions_ok:$conv, override:$ovr,
     passed:($ovr or ($disc and $sign and $lane and $flood and $spec and $conv)),
-    problems:$probs}' > "$OUT"
+    problems:$probs, warnings:$warns}' > "$OUT"
 
+[ "${#warnings[@]}" -gt 0 ] && printf 'intake WARNING: %s\n' "${warnings[@]}" >&2
 echo "intake: disclosed=$disclosed signed_off=$signed_off ($signed/$total signed) laned=$laned flood_ok=$flood_ok spec_ok=$spec_ok conventions_ok=$conv_ok override=$overridden"
 [ -s "$OUT" ] || { echo "intake-check: no output" >&2; exit 1; }

@@ -73,6 +73,15 @@ assert ok and len(calls) == 1 and 'max_completion_tokens' not in calls[0], "norm
 PY
 then ok "reasoning-model max_completion_tokens fallback (mocked)"; else bad "reasoning-model max_completion_tokens fallback"; fi
 
+# --json emits a machine-readable per-role result for CI/tooling, with the same connected/total accounting
+# and exit code as the human output. No ping (config-completeness only), so it is hermetic.
+out="$(python3 "$CC" "$T/.asdd.yml" --no-ping --json 2>&1)"; rc=$?
+if printf '%s' "$out" | python3 -c "import json,sys; d=json.load(sys.stdin); assert isinstance(d['roles'],list) and 'all_connected' in d and 'connected' in d and 'configured' in d; assert all('state' in r and 'connected' in r for r in d['roles'])" 2>/dev/null; then
+  ok "--json emits valid machine-readable per-role status"
+else
+  bad "--json output invalid or incomplete"
+fi
+
 rm -rf "$T"
 echo
 [ "$fail" = 0 ] && echo "connect-check self-test: PASS" || echo "connect-check self-test: FAIL"

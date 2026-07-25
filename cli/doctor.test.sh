@@ -65,4 +65,9 @@ out="$(python3 "$DOC" "$TMP/fast.yml" 2>&1)"
 grep -qi 'reasoning model' <<<"$out" && bad "fast reviewer wrongly warned" \
   || ok "fast reviewer does not trigger the reasoning warn"
 
+# git identity: unset -> WARN (a BYO developer could not sign a commit or attribute it) but still READY.
+out="$(cd "$TMP" && env GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null HOME="$TMP" python3 "$DOC" "$ROOT/.asdd.example.yml" 2>&1)"
+grep -qi "git identity is not set" <<<"$out" && grep -q "RESULT: READY" <<<"$out" \
+  && ok "git identity unset WARNs but stays READY" || bad "git-identity WARN missing"
+
 [ "$fail" = "0" ] && { echo "doctor self-test: PASS"; exit 0; } || { echo "doctor self-test: FAIL"; exit 1; }
