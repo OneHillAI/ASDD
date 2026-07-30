@@ -1,0 +1,6 @@
+[
+  {"kind":"action","run_id":"r1","agent_id":"review","action":"comment","authorizing_decision":"pdp:allow","untrusted_as_instruction":false},
+  {"kind":"action","run_id":"r1","agent_id":"triage","action":"label","authorizing_decision":"pdp:allow","untrusted_as_instruction":false},
+  {"kind":"merge","pr":"123","changed_paths":["src/app.py"],"human_approved_by":"welsbach","disclosed":true,"dco":"human","cross_check":true,"models":{"developer":"A","tester":"B","reviewer":"C"}},
+  {"kind":"merge","pr":"124","changed_paths":["crypto/aes.py"],"human_approved_by":"welsbach","disclosed":true,"dco":"human","cross_check":true,"models":{"developer":"A","tester":"B","reviewer":"C"}}
+]

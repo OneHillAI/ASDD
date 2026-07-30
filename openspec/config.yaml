@@ -1,0 +1,7 @@
+schema: spec-driven
+
+# Project context shown to AI when creating artifacts.
+context: |
+  ASDD (Agentic Spec-Driven Development), the govern layer of the OneHill framework.
+  These OpenSpec changes mirror the builtin-format specs under docs/specs/ so the same
+  proposals are available to adopters who run ASDD with spec_tool: openspec (e.g. via Goose).

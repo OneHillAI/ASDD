@@ -1,0 +1,70 @@
+<svg width="700" viewBox="0 0 700 512" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="The ASDD contribution airlock: a public untrusted zone and a trusted development zone separated by two barrier agents; only a validated spec or a ready pull request crosses.">
+  <rect x="1" y="1" width="698" height="510" rx="14" fill="#FFFFFF" stroke="#E3E5E8"/>
+  <text x="350" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#17191C">the contribution airlock</text>
+
+  <text x="189" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#B23E24">public zone: untrusted</text>
+  <text x="512" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#0E6E54">development zone: trusted</text>
+  <rect x="58" y="80" width="262" height="308" rx="10" fill="none" stroke="#D85A30" stroke-width="1" stroke-dasharray="5 4"/>
+  <rect x="382" y="80" width="260" height="308" rx="10" fill="none" stroke="#1D9E75" stroke-width="1" stroke-dasharray="5 4"/>
+  <line x1="357" y1="82" x2="357" y2="386" stroke="#9AA0A8" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="357" y="74" text-anchor="middle" font-size="12" fill="#5A5F66">airlock</text>
+
+  <g>
+    <rect x="70" y="96" width="238" height="54" rx="6" fill="#F1EFE8" stroke="#B4B2A9"/>
+    <text x="189" y="122" text-anchor="middle" font-size="14" font-weight="600" fill="#2C2C2A">contributors</text>
+    <text x="189" y="140" text-anchor="middle" font-size="12" fill="#5F5E5A">github, website, in-app chat</text>
+  </g>
+  <g>
+    <rect x="70" y="192" width="238" height="68" rx="6" fill="#EEEDFE" stroke="#534AB7"/>
+    <text x="189" y="222" text-anchor="middle" font-size="14" font-weight="600" fill="#3C3489">listener + spec agent</text>
+    <text x="189" y="242" text-anchor="middle" font-size="12" fill="#534AB7">drafts + qualifies the spec</text>
+  </g>
+  <g>
+    <rect x="70" y="302" width="238" height="62" rx="6" fill="#FAECE7" stroke="#D85A30"/>
+    <text x="189" y="330" text-anchor="middle" font-size="14" font-weight="600" fill="#712B13">contributor reviewer</text>
+    <text x="189" y="349" text-anchor="middle" font-size="12" fill="#993C1D">suggests fixes to the author</text>
+  </g>
+
+  <g>
+    <rect x="392" y="92" width="240" height="60" rx="6" fill="#EEEDFE" stroke="#534AB7"/>
+    <text x="512" y="120" text-anchor="middle" font-size="14" font-weight="600" fill="#3C3489">internal reviewer agent</text>
+    <text x="512" y="139" text-anchor="middle" font-size="12" fill="#534AB7">4 lenses + security gate</text>
+  </g>
+  <g>
+    <rect x="392" y="170" width="240" height="54" rx="6" fill="#E1F5EE" stroke="#1D9E75"/>
+    <text x="512" y="196" text-anchor="middle" font-size="14" font-weight="600" fill="#085041">developer agent</text>
+    <text x="512" y="214" text-anchor="middle" font-size="12" fill="#0F6E56">execute + reconcile prs</text>
+  </g>
+  <g>
+    <rect x="392" y="242" width="240" height="54" rx="6" fill="#E1F5EE" stroke="#1D9E75"/>
+    <text x="512" y="268" text-anchor="middle" font-size="14" font-weight="600" fill="#085041">documentation agent</text>
+    <text x="512" y="286" text-anchor="middle" font-size="12" fill="#0F6E56">docs, wiki, impact log</text>
+  </g>
+  <g>
+    <rect x="392" y="314" width="240" height="54" rx="6" fill="#F1EFE8" stroke="#B4B2A9"/>
+    <text x="512" y="340" text-anchor="middle" font-size="14" font-weight="600" fill="#2C2C2A">human merge gate</text>
+    <text x="512" y="358" text-anchor="middle" font-size="12" fill="#5F5E5A">owns protected merges</text>
+  </g>
+
+  <line x1="189" y1="150" x2="189" y2="192" stroke="#888780" stroke-width="1.5"/>
+  <polyline points="70,120 48,120 48,333 70,333" fill="none" stroke="#888780" stroke-width="1.5"/>
+  <line x1="308" y1="224" x2="392" y2="112" stroke="#534AB7" stroke-width="1.5"/>
+  <line x1="308" y1="330" x2="392" y2="134" stroke="#534AB7" stroke-width="1.5"/>
+  <text x="342" y="158" text-anchor="middle" font-size="12" fill="#534AB7">spec</text>
+  <text x="344" y="270" text-anchor="middle" font-size="12" fill="#534AB7">ready pr</text>
+  <line x1="512" y1="152" x2="512" y2="170" stroke="#888780" stroke-width="1.5"/>
+  <line x1="512" y1="224" x2="512" y2="242" stroke="#888780" stroke-width="1.5"/>
+  <line x1="512" y1="296" x2="512" y2="314" stroke="#888780" stroke-width="1.5"/>
+
+  <rect x="70" y="412" width="13" height="13" rx="3" fill="#EEEDFE" stroke="#534AB7"/>
+  <text x="90" y="422" font-size="12" fill="#5A5F66">barrier agent</text>
+  <rect x="210" y="412" width="13" height="13" rx="3" fill="#FAECE7" stroke="#D85A30"/>
+  <text x="230" y="422" font-size="12" fill="#5A5F66">public / untrusted</text>
+  <rect x="380" y="412" width="13" height="13" rx="3" fill="#E1F5EE" stroke="#1D9E75"/>
+  <text x="400" y="422" font-size="12" fill="#5A5F66">internal / trusted</text>
+  <rect x="540" y="412" width="13" height="13" rx="3" fill="#F1EFE8" stroke="#B4B2A9"/>
+  <text x="560" y="422" font-size="12" fill="#5A5F66">neutral / human</text>
+
+  <text x="350" y="460" text-anchor="middle" font-size="12" fill="#5A5F66">Only a validated spec object or a review-ready change crosses the membrane.</text>
+  <text x="350" y="478" text-anchor="middle" font-size="12" fill="#5A5F66">Raw untrusted content, including submitted code, never crosses as instructions.</text>
+</svg>

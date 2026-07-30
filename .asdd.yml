@@ -1,0 +1,203 @@
+# ASDD - adoption config for THIS repo (ASDD governs itself). Edit it; keep it under version control.
+# Schema: .asdd.example.yml. Docs: https://github.com/OneHillAI/ASDD
+
+# Conformance target (see STANDARD.md). Don't change unless you know why.
+standard_version: "0.1"
+
+# Agent runtime. The reference impl ships a pluggable adapter (agents/runtime.md):
+#   generic  -> bring-your-own LLM/Action via scripts/runtime/generic.sh (default)
+# With no ASDD_RUNTIME_TOKEN secret set, review runs in a labelled dry-run so you can see the
+# pipeline before wiring a model.
+runtime: generic
+
+# Merge posture: advisory (humans approve + merge) or earned-automerge. New adopters MUST start
+# advisory (STANDARD §5.3). Auto-merge, if ever enabled, never touches a protected_path (§5.2).
+merge_posture: advisory
+
+# Rate limit: max agent actions per workflow run (STANDARD §3.6). Enforced by the PDP.
+max_actions_per_run: 5
+
+# Fleet model assignments. One HARD invariant: the developer and the tester MUST run different models
+# (a model cannot meaningfully test its own code; different families are preferred). The reviewer SHOULD
+# also differ from the developer. cli/check-models.sh enforces this (run by `init`, and with --strict in
+# a live fleet's CI). Feed these into the Goose recipes' params (developer_model / tester_model / ...).
+models:
+  developer: ""  # bring-your-own (OP.1); the contributor supplies it, not the deployment
+  test_author: "moonshotai:kimi@k2.6"  # writes/extends the test suite from the spec; MUST differ from developer
+  test_runner: "moonshotai:kimi@k2.6"  # runs the suite and reports pass/fail; MUST differ from developer
+  reviewer: "zai:glm@5.2"  # SHOULD differ from developer (the independent merge-reviewer)
+  documentation: "moonshotai:kimi@k2.6"  # the documentation agent (docs / impact-log / knowledge sync)
+  interaction: "zai:glm@5.2"  # the interaction + spec agent (public surface, spec drafting)
+
+# Independent merge-reviewer (agents/review-merge.md). A distinct agent on a DIFFERENT model runs the
+# final merge check - it confirms the gates cleared and returns a verdict. Advisory by default.
+merge_reviewer:
+  enabled: false
+  # The reviewer's model is models.reviewer above - it MUST differ from models.developer and
+  # models.tester (the heterogeneity invariant); a different family is preferred. The reviewer never
+  # sees the builder's context.
+  # review-only (default): the reviewer recommends; a human approves and merges.
+  # earned-automerge: the reviewer may autonomously approve a change that is fully green AND whose every
+  # path is in auto_merge_class below. Turn this on only after a track record (STANDARD §5.3).
+  posture: review-only
+  # Positive allow-list (STANDARD §5.4) of the ONLY paths the reviewer may autonomously approve. It must
+  # never overlap protected_paths (§5.2) - a conforming loader rejects overlap. A protected path can never
+  # be graduated to autonomous by config; that needs a GOVERNANCE decision + a STANDARD amendment.
+  auto_merge_class: []
+    # - "docs/**"
+    # - "**/*.md"
+
+# Protected paths: a defect here is high-impact, so changes stay human-approved forever (§2.2, §5.2).
+# Mirror these in .github/CODEOWNERS and your branch-protection rules. Adjust to your repo.
+protected_paths:
+  - ".github/**"
+  - "scripts/**"
+  - "cli/**"
+  - "standards/**"
+  - "agents/**"
+  - "STANDARD.md"
+  - "GOVERNANCE.md"
+  - "SECURITY.md"
+  - "CONFORMANCE.md"
+  - ".asdd.yml"
+  - "LICENSE"
+  - "NOTICE"
+  - "pyproject.toml"
+
+# Agent identities operating on this repo (login or email substring). check-disclosure.sh enforces the
+# disclosure trailer on commits from these identities (§1.2). Empty => nothing enforced.
+agents: []
+  # - "review-bot"
+  # - "agent@your-project.example"
+
+# Review cost guard. A model call is the only thing here that costs money, and on a public repo
+# anyone can open a pull request. Above this many changed lines the lenses refuse rather than
+# spend: the deterministic gates still run, and a human is told to split the change. 0 disables
+# the cap (only sensible on a private repo).
+review:
+  max_diff_lines: 2000
+
+# Spec tool: which validator decides a change's spec is READY (the operate agents' readiness gate).
+#   builtin  -> ASDD's definition-of-ready (cli/spec-check.py): outcomes/scope/constraints/verification
+#   openspec -> delegate to OpenSpec's own validator (cli/openspec-gate.py, `openspec validate`)
+# ASDD requires that a spec exists and is checked, not that a particular tool wrote it. `builtin` is the
+# default; set `openspec` if the project authors specs with OpenSpec (Fission-AI/openspec).
+spec_tool: builtin
+
+# Where this project's specs live. The intake gate treats a PR as spec-driven when it adds or edits a
+# file matching one of these, or references an existing one. `*` matches one path segment, `**` any
+# depth. Leave spec_paths unset and the gate uses a default that follows spec_tool: docs/specs/*.md for
+# builtin, the OpenSpec change+living-spec layout for openspec. An OpenSpec project can also set it
+# explicitly (note: the DELTAS are the spec, there is no proposal.md in the scaffold):
+#   spec_paths:
+#     - openspec/changes/*/specs/**/*.md   # the change deltas
+#     - openspec/specs/**/*.md             # the living specs
+spec_paths:
+  - docs/specs/*.md
+
+# Contribution lanes. Exactly one per PR (the intake gate enforces it, reading this list).
+# `chore` is the trivial-change escape and skips the spec requirement. Adapt to your project.
+lanes:
+  - feature
+  - fix
+  - docs
+  - chore
+
+# Allow-listed triage labels. The triage agent can only apply labels from this set (§3.3).
+triage_labels:
+  - "bug"
+  - "enhancement"
+  - "documentation"
+  - "security"
+  - "good first issue"
+  - "needs-triage"
+
+# ---------------------------------------------------------------------------
+# ASDD spec-driven profile (optional; STANDARD §8, standards/spec-driven.md).
+# Only meaningful if you claim "ASDD compliant". Runtime-, channel-, and
+# identity-provider-neutral.
+# ---------------------------------------------------------------------------
+
+# Spec-driven intake gate (spec-driven §SD). Intake must produce a spec object meeting the
+# definition of ready before a contribution is built or claimed.
+intake:
+  # Floor is outcomes+scope+constraints+verification (§SD.2); add project-specific fields here.
+  definition_of_ready:
+    - outcomes
+    - scope
+    - constraints
+    - verification
+  completeness_gate: true          # park incomplete contributions as needs-clarification (§SD.4)
+  spec_context: docs               # docs | codebase - what the spec agent may read.
+                                   #   docs (default): documentation + knowledge base only. Use for
+                                   #   PUBLIC contribution surfaces (an open-source project): untrusted
+                                   #   contributors must never reach the codebase.
+                                   #   codebase: the full repository. Only for PRIVATE, in-org use
+                                   #   where the contributor is trusted.
+
+# Two-tier contributor identity (spec-driven §ID). ASDD requires "DCO-capable" to merge and
+# "attributable" to propose; which PROVIDER satisfies that is your choice (leave provider empty
+# to stay provider-neutral; an implementation sets e.g. "github-oauth").
+identity:
+  authoring: dco                   # DCO-capable human required to merge code (§ID.1)
+  proposing: attributable          # any attributable identity may submit a spec (§ID.2)
+  provider: ""                     # implementation choice; ASDD mandates none (§ID.5)
+
+# Claim protocol (spec-driven §CL). Serializes work at the spec, before code exists.
+claim:
+  one_active_per_item: true        # at most one active claim per work item (§CL.2)
+  max_active_per_identity: 1       # optional cap on concurrent claims per contributor
+  ttl_hours: 168                   # claims auto-release after this window (§CL.3)
+
+# Contributor-facing reviewer (agents/review-contributor.md, spec-driven §RR). Advisory: it
+# suggests fixes the CONTRIBUTOR accepts/rejects to reach "ready". It is NOT the merge gate (§RR.2)
+# and is distinct from merge_reviewer above. Its model MUST NOT be the governance gate's model.
+contributor_review:
+  enabled: true
+  posture: advisory                # suggests only; never sets required status or merges
+
+# Agent-activity + development insights. Each agent run appends a structured record (agent, phase,
+# model, verdict, findings, duration, test + coverage results). The developer publishes this to a
+# dashboard (cli/dashboard.py reads it) to see what the agents are doing and how development is going.
+insights:
+  enabled: true
+  activity_log: ".asdd-work/audit.jsonl"      # the run's audit records (see `audit:` below);
+                                             # durability comes from the audit export, not this path
+
+# ---------------------------------------------------------------------------
+# Audit ledger (STANDARD 1.3). Every agent action gets one append-only, hash-chained record: who did it,
+# what, to what, under whose authorisation, when, why, and what it caused. Records are emitted into the
+# run directory by the READ-ONLY jobs (no sink credential there) and exported by the WRITE-SCOPED publish
+# job to a sink YOU own. ASDD hosts nothing and no data leaves your control by default.
+# The ledger is as sensitive as the code it describes, so it is never written into this repository.
+#   sink: none    -> default. Nothing is exported and the pipeline is unchanged.
+#   sink: repo    -> append to a PRIVATE sibling repo (set sink_repo; needs the AUDIT_SINK_TOKEN secret).
+#                    Refused if it is the repo being governed, or if it is public, or if privacy is
+#                    unprovable. Git supplies append-only ordering, access control and retention.
+#   sink: command -> bring your own sink; sink_command receives the ledger path as "$1".
+# The trail is a record, never a gate: nothing here approves, blocks, or merges.
+audit:
+  # This repository dogfoods the govern-layer GATES on its own contributions; it does not run a
+  # OneHill deployment. So the audit sink stays off here. Configuring a private sink, the token, and
+  # any publishing is a deployment concern, kept out of the public framework repo.
+  sink: none
+  retention_days: 0
+
+# Conventions: how THIS repository ships. Declared so the operate agents conform to it instead of
+# guessing, and so `asdd conventions-check` can hold a change to it. Only the change is judged, never
+# the existing tree.
+conventions:
+  # No spec_dir here on purpose: `spec_paths` + `spec_tool` above already govern where this repo's
+  # specs live and which validator decides readiness. Declaring it twice would be the duplication the
+  # map-never-duplicate invariant exists to prevent, and the two would drift.
+  exempt_lanes: [chore]
+  # A command that ships without reaching the reference is undiscoverable. `asdd doctor` sat
+  # undocumented through a whole merged pull request because nothing checked this.
+  docs:
+    "cli/*.py":
+      require: ["cli/README.md", "docs/reference/README.md"]
+      why: "a command or gate is not shipped until the CLI reference describes it"
+    "docs/guides/*.md":
+      on: added                 # only a NEW guide needs an index entry; editing one does not
+      require: ["docs/README.md"]
+      why: "a guide the index does not list cannot be found"

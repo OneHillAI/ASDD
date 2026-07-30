@@ -1,0 +1,25 @@
+# ASDD working files produced by the review/triage pipeline
+.asdd-work/
+review.json
+triage.json
+artifact/
+
+# Local secrets / runtime config, never commit
+.env
+*.local
+
+# Python build artifacts
+*.egg-info/
+__pycache__/
+*.pyc
+build/
+dist/
+
+# OS / editor cruft
+.DS_Store
+*.swp
+
+# Staged into the wheel at build time by setup.py; the repo trees are the source.
+asdd_kit/*
+!asdd_kit/__init__.py
+dashboard.html

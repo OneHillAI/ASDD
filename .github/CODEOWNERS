@@ -1,0 +1,21 @@
+# ASDD protected-path human gate (STANDARD §2.2).
+#
+# Every path here requires a review from a named human owner before merge, regardless of any agent
+# verdict. Turn on branch protection for your default branch with "Require review from Code Owners"
+# so this is enforced mechanically, not by convention. Keep this in sync with protected_paths in
+# .asdd.yml.
+#
+# @welsbach is the interim sole maintainer. To let the maintainer set grow, create an org team
+# (e.g. @OneHillAI/maintainers), add the members, and replace @welsbach here with the team.
+
+# Default owner for everything.
+*                       @welsbach
+
+# Highest-risk: the standard, the security workflows, the PDP, and governance.
+/STANDARD.md            @welsbach
+/GOVERNANCE.md          @welsbach
+/SECURITY.md            @welsbach
+/.github/               @welsbach
+/scripts/               @welsbach
+/standards/             @welsbach
+/.asdd.yml       @welsbach

@@ -1,0 +1,7 @@
+{ "schema": "asdd/intake/v0.1", "ready": false,
+  "spec": {
+    "outcomes": ["add pagination to items"],
+    "scope": { "in": [], "out": [] },
+    "constraints": [],
+    "verification": [],
+    "category": "feature", "priority": "P3" } }

@@ -1,0 +1,129 @@
+# Changelog
+
+Notable changes to ASDD. The format follows [Keep a Changelog](https://keepachangelog.com); the standard
+is versioned with [Semantic Versioning](https://semver.org). While pre-1.0 the standard is a moving
+draft, so pin a conformance claim to a commit or date.
+
+## [Unreleased]
+
+### Added
+- **The audit trail is complete: every agent's records reach the sink, not only the reviewer's.** Before,
+  only the review exported, so a deployment that turned on `audit.sink` captured the reviewer's decisions
+  but lost the produce side (the developer/council "coding"), the test and documentation agents, and the
+  operator agents. Now every path records through one route and exports from a credential-safe point (the
+  produce wrapper, the runners, the council), the untrusted PR review keeps its record/publish split, and
+  `doctor` runs a **dynamic completeness check** that enumerates every record-writing path and warns on any
+  with no export route, so a new agent added later cannot silently drop its trail. The check also covers the
+  CI workflow surface with a stricter rule: because the sink credential lives in the job, a workflow that
+  runs a recorder which does not itself export (for example `dev-council.py` wired straight into a workflow
+  instead of through the exporting `dev-council.sh`) must export in that same job, and cannot lean on a
+  runner it bypassed. `audit-export.sh` also derives the governed repo from the git remote when
+  `GITHUB_REPOSITORY` is unset, so its "never export into the repo you govern" refusal holds on host runs,
+  not only in CI.
+- **A deterministic preflight gate runs the project's real test suite.** `conventions.preflight` (the
+  adopter's own `ruff`/`pytest`/`mypy` command) was declared and surfaced to the agents but never actually
+  run. The new `asdd-preflight.yml` workflow runs it on every PR through `.github/asdd/preflight.sh`, so a
+  regression the model review missed is still caught by the real suite; its exit status is the gate. It is
+  distinct from the model test-runner agent, holds no secrets, and is an opt-in no-op until the command is
+  set. A spec-and-test framework should run the tests, not only reason about them.
+- **`doctor` warns when the git identity is unset.** A contributor whose `user.name` / `user.email` are
+  not set produces commits that cannot be signed off or attributed, so intake rejects them after the work
+  is done. The preflight now flags this up front, as a warning, so it is fixed before the first commit.
+- **`connect-check --json` for tooling and CI.** The per-role connected/dry-run status is now available as
+  machine-readable JSON with the same accounting and exit code as the human output, so a setup script or
+  pipeline can gate on it without scraping text.
+- **Intake warns when a `chore` change authors a spec.** The `chore` lane is spec-exempt, so a change that
+  adds or edits a spec while labelled `chore` is almost certainly a mislabelled feature or fix. Intake now
+  surfaces this as a non-failing warning (the change still passes) so the lane can be corrected.
+- **Editor pointers for a bring-your-own developer.** `init` now writes a thin pointer for the common
+  coding assistants (`CLAUDE.md` for Claude Code and the Claude app, `.cursor/rules/asdd.mdc` for Cursor;
+  Codex and other AGENTS.md-convention tools read `AGENTS.md` directly), so a contributor's assistant loads
+  the contribution constitution with no manual setup. Each pointer references `AGENTS.md` and is skipped if
+  the file already exists, so an existing rule file is never overwritten. A new guide,
+  [bring your own developer](docs/guides/bring-your-own-developer.md), covers the non-engineer spec path
+  and that the operate agents run on open-source Goose.
+- **`doctor` and `setup` warn when the reviewer is a heavy reasoning model.** A reasoning model reasons at
+  length and can exceed a hosted inference window on a real code diff, so the review times out and posts no
+  lenses while trivial or docs-only diffs still pass and look fine. The preflight and the setup wizard now
+  flag a reasoning reviewer (a property of the model, not the host) and point to a faster one.
+- **A configurable per-call review timeout that fails fast.** The model call now has a default 45s timeout
+  (`review.timeout_seconds` / `ASDD_MODEL_TIMEOUT`), above a fast reviewer's real-diff time and below a
+  reasoning model's server-side hang, so a slow reviewer fails fast with an actionable message naming the
+  cause instead of burning the full server timeout on every retry.
+
+### Fixed
+- **Review runtime recovers the model's JSON.** A reasoning model wraps its review object in analysis
+  prose (with its own braces), code fences, or trailing commentary, or emits it in a separate
+  `reasoning_content` field; the old first-brace-to-last-brace recovery then captured an invalid span and
+  the review degraded to a "human should review manually" placeholder even though the model had reviewed.
+  Extraction now uses a real JSON parser ([extract-json.py](.github/asdd/runtime/extract-json.py)) that
+  recovers the review object and still fails closed on genuine non-JSON, and the adapter logs a key-safe
+  redacted diagnostic on a persistent failure. Spec:
+  [review-json-recovery.md](docs/specs/review-json-recovery.md).
+- **Config list-readers ignore inline comments.** A documented config, `- chore  # trivial`, left the
+  trailing comment on the token, so no lane label ever matched (intake failed for every PR), a commented
+  `spec_paths` glob matched nothing, and the CODEOWNERS generator emitted a broken owner line. The lane,
+  spec-path, and protected-path readers now strip an inline comment before the token.
+- **`asdd init --goose` copies the review runtime's JSON extractor.** `openai-compat.sh` shells to
+  `extract-json.py`, but the runtime copy loop omitted it, so a fresh adopter fell back to the weaker
+  extraction and a reasoning model's review could fail. It now travels with the runtime.
+- **`connect-check` pings with a real token budget.** A one-token ping made some reasoning models return
+  HTTP 500, false-failing a reachable model; the ping now uses a small but sufficient budget.
+- **DCO skips merge commits.** The intake DCO check counted every commit in the range, so a routine
+  "update this branch with main" (or the GitHub "Update branch" button) added an unsigned merge commit
+  that failed DCO with no clean fix, because a merge commit cannot be signed without rewriting history.
+  The commit list is now built with `--no-merges`, matching the DCO convention.
+- **The review adapter falls back when a provider rejects `response_format`.** Some OpenAI-compatible
+  providers (seen with a GLM reasoning model on Runware) return HTTP 500 on `response_format:
+  {type: json_object}`, so the model lenses produced no output and the review failed closed even though
+  the connection was fine. The adapter now asks for `response_format` on the first attempt and drops it on
+  retry, leaning on the system prompt and the extractor, and logs the raw error body on a persistent
+  failure so the cause is named.
+- **Model calls fall back to `max_completion_tokens`.** A newer OpenAI reasoning model rejects `max_tokens`
+  with a 400 asking for `max_completion_tokens`, so `connect-check` reported it dead and the developer
+  council could not call it. Both now send `max_tokens` first and retry once with the renamed parameter on
+  that specific 400; every other model is unaffected.
+
+## [0.1.0] - 2026-07-22
+
+Initial public release.
+
+### The standard and the govern layer
+- **The standard** ([STANDARD.md](STANDARD.md)), self-certifiable against [CONFORMANCE.md](CONFORMANCE.md):
+  every change disclosed, gated by hard checks, reviewed against its spec, and merged by a named human.
+- **The govern layer**: the intake to review to publish pipeline on GitHub Actions. Review is triggered
+  by intake completing, so a failed intake never reaches a model and a fork PR gets the same real review;
+  a write-scoped publish job posts the advisory and sets the `asdd/review` status, and never merges.
+- **The impact lens**: every change is classified for its effect on the framework, so a normative change
+  cannot merge undeclared or without an impact analysis and a target version.
+- **Deterministic gates** and the `asdd` CLI: `spec-check`, `openspec-gate`, `claim-check`,
+  `merge-eligibility`, `conventions-check`, `audit`, `run-agent`, `audit-check`, `doctor`, `workflow-lint`,
+  plus `init`, `setup`, and a read-only governance dashboard. The declared `conventions:` block is enforced
+  at intake on every pull request, not only runnable by hand.
+
+### The agent audit ledger (STANDARD 1.3)
+- Every agent action is recorded as an append-only, hash-chained entry: identity, action, target,
+  authorizing decision, timestamp, reasoning, and the action it caused. Reviewed content is never stored,
+  only a digest. Records export to a private sink the adopter owns; the export refuses the governed repo
+  and any public destination, and keeps the chain continuous across batches. Two derived views: a training
+  corpus (aggregates and reasoning, no finding text or paths) and curated knowledge emitted as real
+  **OKGF pages** (OKGF is the knowledge standard ASDD adopts), validated against OKGF's own conformance so
+  an OKGF store ingests them with no translation.
+
+### Adopting into an existing project
+- Declare how a project already ships in a `conventions:` block, and `conventions-check` holds agent output
+  to it. Every field is optional and the gate judges only the change, so a mature repository adopts on
+  day one. Knowledge may be seeded from project history, kept distinct from the audit trail.
+
+### Bring your own
+- **Spec tool**: the built-in definition of ready, or OpenSpec, chosen at setup. The framework mandates a
+  spec exists and is checked, not which tool wrote it.
+- **Runtime**: any OpenAI-compatible model behind a pluggable adapter, with a retry and tolerant parser.
+- **The Goose operate kit** (alpha): ready-to-run recipes on unmodified Goose, plus the slash commands.
+  Every agent has a run path: intake and the review lenses in CI; documentation and a post-merge test run
+  as trusted post-merge workflows; triage, support, contributor review, merge review and interaction run
+  on demand (the fixed-prompt agents through `run-agent`, which fences untrusted input the way the review
+  runtime does and records each run). The tester never runs automatically on an untrusted open PR.
+- Optional profiles: **Assure** (integrity attestation) and the **spec-driven** profile.
+
+[0.1.0]: https://github.com/OneHillAI/ASDD/releases/tag/v0.1.0
