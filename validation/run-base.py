@@ -38,6 +38,10 @@ CHECKS = [
     ("operate runners leave + export a trail",   ["bash", ".github/asdd/operate/runner-trail.test.sh"],
      "zero", "test/docsync record on every exit (dry-run, refusal, real run) and export only when a sink "
              "credential is present, so no run is invisible and a tokenless run never tries to push"),
+    ("operate runners agree with their recipes", ["bash", ".github/asdd/operate/runner-contract.test.sh"],
+     "zero", "test/docsync pass only parameters their recipe declares, the result heading the test runner "
+             "extracts is one its recipe prints, Goose is given the full request path for any endpoint form, and a "
+             "wired run that returns nothing reports a failure rather than asking a connected deployment to wire"),
     ("operate-run deterministic emission",      ["bash", "cli/operate-run.test.sh"],
      "zero", "the run wrapper emits exactly one record even when the agent run produced nothing, so a "
              "provider timeout mid-run cannot silently lose the action"),

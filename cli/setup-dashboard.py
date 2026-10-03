@@ -242,6 +242,13 @@ def run_env(url, token_var):
     env = dict(os.environ)
     scheme, _, rest = url.partition("://")
     host, _, path = rest.partition("/")
+    # Goose takes the FULL request path (default v1/chat/completions), not a base: a bare .../v1 endpoint
+    # would be requested as POST /v1 and 404. Accept either form, as connect-check does.
+    path = path.split("?", 1)[0].rstrip("/")
+    if not path:
+        path = "v1/chat/completions"
+    elif not path.endswith("chat/completions"):
+        path += "/chat/completions"
     env["OPENAI_API_KEY"] = os.environ.get(token_var, "")
     env["OPENAI_HOST"] = f"{scheme}://{host}"
     env["OPENAI_BASE_PATH"] = path

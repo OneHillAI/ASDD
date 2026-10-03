@@ -79,6 +79,11 @@ assert "change_ref" in keys and "instructed_by" in keys, keys
 env = m.run_env("https://runware.ai/v1/chat/completions", "NOPE_UNSET")
 assert env["OPENAI_HOST"] == "https://runware.ai", env["OPENAI_HOST"]
 assert env["OPENAI_BASE_PATH"] == "v1/chat/completions", env["OPENAI_BASE_PATH"]
+# A bare endpoint (https://host/v1) must not reach Goose as POST /v1: it takes the full request path.
+for bare, want in [("https://runware.ai/v1", "v1/chat/completions"), ("https://runware.ai/v1/", "v1/chat/completions"),
+                   ("https://runware.ai", "v1/chat/completions"), ("https://x.example/api/v2", "api/v2/chat/completions")]:
+    got = m.run_env(bare, "NOPE_UNSET")["OPENAI_BASE_PATH"]
+    assert got == want, f"{bare} -> {got!r}, want {want!r}"
 print("executor ok")
 PY
 

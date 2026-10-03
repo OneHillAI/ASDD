@@ -52,6 +52,16 @@ draft, so pin a conformance claim to a commit or date.
   cause instead of burning the full server timeout on every retry.
 
 ### Fixed
+- **The post-merge test and documentation runners work against a wired runtime, and say so when they do
+  not.** `test.sh` passed `change_ref` to a recipe whose parameter is `pr`, so the test agent never
+  started, and the failure was hidden; the recipe also never printed the `## Test result` heading
+  `test.sh` extracts, so a real result could not be recognised. Both runners derived Goose's request path
+  from the endpoint as written, so a bare `https://host/v1` endpoint was requested as `POST /v1` (404); they
+  and the setup dashboard now accept any endpoint form, as `connect-check` already did. A wired run that
+  returned nothing was reported as a "dry run" that told a connected deployment to wire its model; it now
+  reports that the run did not complete and records the verdict `error`. The documentation recipe opens its
+  own PR while `docsync.sh` expects a printed proposal; that mismatch is left for a separate change. Spec:
+  [operate-runner-contract](docs/specs/operate-runner-contract.md).
 - **Review runtime recovers the model's JSON.** A reasoning model wraps its review object in analysis
   prose (with its own braces), code fences, or trailing commentary, or emits it in a separate
   `reasoning_content` field; the old first-brace-to-last-brace recovery then captured an invalid span and

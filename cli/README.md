@@ -106,7 +106,9 @@ sh cli/setup-dashboard.test.sh                  # self-test
 
 The config defaults to `./.asdd.yml`, like `asdd setup`. Run it through the unified CLI as
 `asdd setup-dashboard`. It reuses `setup-goose.py`'s tested read/write/validate logic, so the CLI wizard
-and the dashboard can never disagree.
+and the dashboard can never disagree. Where it hands an agent run to Goose, it accepts an endpoint written
+as a bare `https://host/v1` or as the full chat-completions URL and gives Goose the full request path
+either way, the same as the post-merge runners (`cli/templates/operate/test.sh`, `docsync.sh`).
 
 ## resolve-model
 
