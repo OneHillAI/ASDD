@@ -19,6 +19,12 @@ Config (.asdd.yml):
       max_critique_rounds: 1    # bounded; hard cap 2
       max_refine_rounds: 1      # bounded; hard cap 2
       max_tokens: 4000          # per model call
+      reasoning_effort: low     # optional; sent on every council call; unset = the provider's default
+
+A reasoning model can spend the whole max_tokens budget on hidden reasoning and return no answer (the lead did
+this on a real run), so the result says what actually happened: a lead that returned nothing, a result nothing
+verified, and any proposal or synthesis cut off at the token cap are each named in the result header and the
+transcript, never passed off as a clean council synthesis.
 
 Bring the models two ways (whichever the operator already has):
   - one multi-model provider: shared ASDD_MODEL_URL + ASDD_RUNTIME_TOKEN, the model NAMES above distinguish.
@@ -179,7 +185,21 @@ def resolve_members(models):
 
 
 # --- one free-form OpenAI-compatible call (NOT the review adapter: proposers emit code/prose, not JSON) --
-def call_model(member, system, user, max_tokens, retries=2, timeout=180):
+class Reply(str):
+    """A model's text plus how the call ended. To every caller it is the plain string it always was (empty
+    when the member could not answer). `truncated` is True when the endpoint stopped at the token cap
+    (finish_reason 'length'), so the text is cut off; `why` says what went wrong when the text is empty."""
+    truncated = False
+    why = ""
+
+
+def _reply(text, truncated=False, why=""):
+    r = Reply(text)
+    r.truncated, r.why = truncated, why
+    return r
+
+
+def call_model(member, system, user, max_tokens, retries=2, timeout=180, effort=None):
     endpoint = member["url"].rstrip("/")
     if not endpoint.endswith("/chat/completions"):
         endpoint += "/chat/completions"
@@ -188,22 +208,31 @@ def call_model(member, system, user, max_tokens, retries=2, timeout=180):
     tok_param = "max_tokens"
     last = ""
     for attempt in range(max(1, retries + 1)):
-        body = json.dumps({
+        payload = {
             "model": member["model"],
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
             tok_param: max_tokens,
-        }).encode("utf-8")
-        req = urllib.request.Request(endpoint, data=body, headers={
+        }
+        if effort:
+            payload["reasoning_effort"] = effort
+        req = urllib.request.Request(endpoint, data=json.dumps(payload).encode("utf-8"), headers={
             "Authorization": "Bearer " + member["token"],
             "Content-Type": "application/json",
         })
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 data = json.loads(r.read().decode("utf-8", "replace"))
-            msg = (data.get("choices") or [{}])[0].get("message") or {}
+            choice = (data.get("choices") or [{}])[0]
+            msg = choice.get("message") or {}
             text = (msg.get("content") or msg.get("reasoning_content") or "").strip()
+            cut = choice.get("finish_reason") == "length"
             if text:
-                return text
+                return _reply(text, truncated=cut)
+            if cut:
+                # A reasoning model spent the whole budget thinking and never answered. The same call would
+                # spend the same budget again, so do not retry it.
+                last = "token cap reached before any answer, finish_reason length"
+                break
             last = "empty content"
         except urllib.error.HTTPError as e:
             last = f"HTTP {e.code}"
@@ -218,7 +247,7 @@ def call_model(member, system, user, max_tokens, retries=2, timeout=180):
                     continue
         except Exception as e:
             last = type(e).__name__
-    return ""  # a member that cannot answer drops out (graceful degradation)
+    return _reply("", why=last)  # a member that cannot answer drops out (graceful degradation)
 
 
 # --- the change under implementation: read the OpenSpec change and its acceptance criteria --------------
@@ -293,6 +322,59 @@ TESTRUN_SYS = ("You are the test runner. Given the acceptance criteria, the impl
                "return ONLY a JSON object: {\"pass\": true|false, \"reasoning\": \"...\"}.")
 
 
+def _cut_off(reply):
+    """True when a call_model reply was stopped at the token cap (a plain str never is)."""
+    return bool(getattr(reply, "truncated", False))
+
+
+def _miss(transcript, member, step, reply="", why=""):
+    """Record a member that gave no answer at a step, so the result can name it instead of it silently dropping out."""
+    transcript["failures"].append({"model": member["model"], "step": step,
+                                   "why": why or getattr(reply, "why", "") or "no output"})
+
+
+def _audit_verdict(lead_failed, verified, passed):
+    """The ledger verdict. Only a lead-synthesised, verified, passing result is a plain pass."""
+    if lead_failed:
+        return "error"
+    if not verified:
+        return "unverified"
+    return "pass" if passed else "changes-requested"
+
+
+def result_header(transcript, verdict):
+    """What opens the result: a heading plus a note for anything that makes it less than a clean, verified
+    council synthesis (a lead that produced nothing, no verification, text cut off at the token cap)."""
+    verified = verdict.get("verified", True)
+    bits = [f"{len(transcript['members'])} models"]
+    silent = list(dict.fromkeys(f["model"] for f in transcript["failures"]))
+    if silent:
+        bits.append("NO ANSWER FROM " + ", ".join(silent))
+    if transcript["lead_failed"]:
+        bits.append("LEAD FAILED, one proposal and not a synthesis")
+    if not verified:
+        bits.append("NOT VERIFIED")
+    else:
+        bits.append("verify passed" if verdict.get("pass") else "verify FAILED")
+    if transcript["refined"]:
+        bits.append("refined once")
+    notes = [f"{f['model']} gave no answer at {f['step']} ({f['why']})." for f in transcript["failures"]]
+    if transcript["lead_failed"]:
+        notes.append(f"The lead ({transcript['members'][-1]}) returned no synthesis "
+                     f"({transcript['lead_failure']}). The synthesis step fell back to the proposal from "
+                     f"{transcript['fallback_proposal']}.")
+    if not verified:
+        notes.append(f"Verification: {verdict.get('reasoning') or 'did not run'}.")
+    cut = [p["model"] for p in transcript["proposals"] if p.get("truncated")]
+    if cut:
+        notes.append("Cut off at the token cap (the draft is incomplete): the proposal from "
+                     + ", ".join(cut) + ".")
+    if transcript["synthesis_truncated"]:
+        notes.append("The final text below was cut off at the token cap.")
+    return (f"# Developer council result ({', '.join(bits)})\n\n"
+            + "".join(f"> {n}\n" for n in notes) + ("\n" if notes else ""))
+
+
 def main():
     ap = argparse.ArgumentParser(prog="asdd dev-council", description="The developer council orchestrator.")
     ap.add_argument("--change", help="the OpenSpec change id under openspec/changes/")
@@ -311,6 +393,7 @@ def main():
     n_crit = _clamp_rounds(cfg.get("max_critique_rounds", 1))
     n_refine = _clamp_rounds(cfg.get("max_refine_rounds", 1))
     max_tokens = int(cfg.get("max_tokens") or 4000)
+    effort = str(cfg.get("reasoning_effort") or "").strip() or None
 
     # Size: 2..5, default 3. Fewer than 2 is not a council; more than 5 is capped with notice.
     if not models:
@@ -371,19 +454,26 @@ def main():
         return 0
 
     transcript = {"change": a.change, "members": [m["model"] for m in members],
-                  "proposals": [], "critiques": [], "synthesis": "", "verify": {}, "refined": False}
+                  "proposals": [], "critiques": [], "synthesis": "", "verify": {}, "refined": False,
+                  "lead_failed": False, "lead_failure": "", "fallback_proposal": "",
+                  "synthesis_truncated": False, "failures": []}
 
     # 1. PROPOSE
     user = f"OpenSpec change acceptance criteria and context:\n\n{criteria}\n\nDraft your implementation."
     for m in proposers:
         if not (m["url"] and m["token"]):
+            _miss(transcript, m, "propose", why="not wired")
             continue
-        text = call_model(m, PROPOSE_SYS, user, max_tokens)
+        text = call_model(m, PROPOSE_SYS, user, max_tokens, effort=effort)
         if text:
-            transcript["proposals"].append({"model": m["model"], "text": text})
+            transcript["proposals"].append({"model": m["model"], "text": text, "truncated": _cut_off(text)})
+        else:
+            _miss(transcript, m, "propose", text)
     if not transcript["proposals"]:
         record(root, "dev-council.run", "error", "every proposer failed to draft", {"proposals": 0})
-        msg = "ASDD developer council - no proposer produced a draft (runtime errors). A human should implement this."
+        reasons = "; ".join(f"{f['model']}: {f['why']}" for f in transcript["failures"])
+        msg = ("ASDD developer council - no proposer produced a draft (runtime errors). "
+               f"A human should implement this. Reasons: {reasons}.")
         (open(a.out, "w").write(msg + "\n") if a.out else print(msg))
         return 0
 
@@ -394,17 +484,30 @@ def main():
         cu = f"Acceptance criteria:\n{criteria}\n\nProposals:\n{others}\n\nCritique each ONLY against the criteria."
         for m in proposers:
             if not (m["url"] and m["token"]):
+                _miss(transcript, m, "critique", why="not wired")
                 continue
-            c = call_model(m, CRITIQUE_SYS, cu, max_tokens)
+            c = call_model(m, CRITIQUE_SYS, cu, max_tokens, effort=effort)
             if c:
-                transcript["critiques"].append({"model": m["model"], "text": c})
+                transcript["critiques"].append({"model": m["model"], "text": c, "truncated": _cut_off(c)})
+            else:
+                _miss(transcript, m, "critique", c)
 
     # 3. SYNTHESISE (the lead)
     props = "\n\n".join(f"[{i+1}]\n{p['text']}" for i, p in enumerate(transcript["proposals"]))
     crits = "\n\n".join(c["text"] for c in transcript["critiques"])
     su = (f"Acceptance criteria:\n{criteria}\n\nProposals:\n{props}\n\nCritiques:\n{crits}\n\n"
           "Produce one implementation that best satisfies the criteria.")
-    synthesis = call_model(lead, SYNTH_SYS, su, max_tokens) or (transcript["proposals"][0]["text"])
+    reply = call_model(lead, SYNTH_SYS, su, max_tokens, effort=effort)
+    if reply:
+        synthesis = reply
+        transcript["synthesis_truncated"] = _cut_off(reply)
+    else:
+        # The lead gave nothing (a reasoning model can burn the whole budget thinking). Fall back to the
+        # first proposal so a draft still comes back, but SAY so: it is one member's draft, not a synthesis.
+        first = transcript["proposals"][0]
+        synthesis = first["text"]
+        transcript.update(lead_failed=True, lead_failure=getattr(reply, "why", "") or "no output",
+                          fallback_proposal=first["model"], synthesis_truncated=first["truncated"])
     transcript["synthesis"] = synthesis
 
     # 4. VERIFY (test agents on models distinct from the council), then one refine round on failure
@@ -412,26 +515,36 @@ def main():
     if not verdict.get("pass", True) and n_refine:
         ru = (f"Acceptance criteria:\n{criteria}\n\nYour implementation:\n{synthesis}\n\n"
               f"It failed verification: {verdict.get('reasoning', '')}\n\nRefine it to pass.")
-        refined = call_model(lead, SYNTH_SYS, ru, max_tokens)
+        refined = call_model(lead, SYNTH_SYS, ru, max_tokens, effort=effort)
         if refined:
             transcript["synthesis"] = synthesis = refined
+            transcript["synthesis_truncated"] = _cut_off(refined)
             transcript["refined"] = True
             verdict = verify(root, cfg_all, criteria, synthesis, a.test_cmd, max_tokens, transcript)
     transcript["verify"] = verdict
 
     # record: counts + the lead's own short rationale, never the drafted code
-    record(root, "dev-council.run", "pass" if verdict.get("pass") else "changes-requested",
-           f"council of {len(members)} synthesised a result for {a.change}; verify "
-           f"{'passed' if verdict.get('pass') else 'failed'}"
-           f"{'; refined once' if transcript['refined'] else ''}",
+    lead_failed, verified = transcript["lead_failed"], bool(verdict.get("verified", True))
+    passed = bool(verdict.get("pass")) and verified
+    outcome = ("passed" if passed else "failed") if verified else "not verified"
+    record(root, "dev-council.run", _audit_verdict(lead_failed, verified, bool(verdict.get("pass"))),
+           f"council of {len(members)} "
+           f"{'LEAD FAILED, fell back to one proposal' if lead_failed else 'synthesised a result'} "
+           f"for {a.change}; verify {outcome}{'; refined once' if transcript['refined'] else ''}",
            {"members": len(members), "proposals": len(transcript["proposals"]),
             "critiques": len(transcript["critiques"]), "refined": transcript["refined"],
-            "verify_pass": bool(verdict.get("pass")), "synthesis_digest": digest(synthesis)})
+            "lead_failed": lead_failed, "failed_calls": len(transcript["failures"]),
+            "verified": verified, "verify_pass": passed,
+            "truncated_proposals": sum(1 for p in transcript["proposals"] if p.get("truncated")),
+            "synthesis_truncated": transcript["synthesis_truncated"],
+            "synthesis_digest": digest(synthesis)})
 
     # Curated learnings for the knowledge base: the verified synthesis is an exemplar, each set-aside
     # approach a rejected page. The reasoning is the model's own one-line RATIONALE/REJECT statement, a
     # clean decision, never the drafted code, so an OKGF page never carries the implementation verbatim.
-    if verdict.get("pass"):
+    # Only a real synthesis that was verified and is complete earns it: one proposal standing in for a
+    # failed lead, an unverified result or a cut-off text is not an exemplar to learn from.
+    if passed and not lead_failed and not transcript["synthesis_truncated"]:
         rationale = (_marked(synthesis, "RATIONALE") or ["a synthesis that passed the council's verify"])[0]
         record(root, "dev-council.synthesis", "pass", rationale,
                {"members": len(members), "synthesis_digest": digest(synthesis)}, lens="council-synthesis")
@@ -442,10 +555,7 @@ def main():
 
     if a.transcript:
         open(a.transcript, "w", encoding="utf-8").write(json.dumps(transcript, indent=2))
-    header = (f"# Developer council result ({len(members)} models, "
-              f"verify {'passed' if verdict.get('pass') else 'FAILED'}"
-              f"{', refined once' if transcript['refined'] else ''})\n\n")
-    out = header + synthesis
+    out = result_header(transcript, verdict) + synthesis
     (open(a.out, "w", encoding="utf-8").write(out + "\n") if a.out else print(out))
     return 0
 
@@ -471,10 +581,13 @@ def verify(root, cfg_all, criteria, implementation, test_cmd, max_tokens, transc
     # shell is the intended interface (they may write `pytest && ...`). Not an injection surface.
     if test_cmd:
         r = subprocess.run(test_cmd, shell=True, cwd=root, capture_output=True, text=True)  # nosec B602
-        return {"pass": r.returncode == 0, "reasoning": f"ran `{test_cmd}` -> exit {r.returncode}",
-                "tests_from": ta["model"]}
+        return {"pass": r.returncode == 0, "verified": True,
+                "reasoning": f"ran `{test_cmd}` -> exit {r.returncode}", "tests_from": ta["model"]}
     if not (tr["url"] and tr["token"] and tr["model"]):
-        return {"pass": True, "reasoning": "no test runner wired; not verified", "tests_from": ta["model"]}
+        # pass stays True so nothing is "refined" for a failure that did not happen; `verified` is what
+        # says nothing checked the result.
+        return {"pass": True, "verified": False, "reasoning": "no test runner wired; not verified",
+                "tests_from": ta["model"]}
     j = call_model(tr, TESTRUN_SYS,
                    f"Acceptance criteria:\n{criteria}\n\nImplementation:\n{implementation}\n\nTests:\n{tests}",
                    512)
@@ -483,8 +596,8 @@ def verify(root, cfg_all, criteria, implementation, test_cmd, max_tokens, transc
         d = json.loads(m.group(0)) if m else {}
     except Exception:
         d = {}
-    return {"pass": bool(d.get("pass", False)), "reasoning": str(d.get("reasoning", "no verdict"))[:280],
-            "tests_from": ta["model"]}
+    return {"pass": bool(d.get("pass", False)), "verified": True,
+            "reasoning": str(d.get("reasoning", "no verdict"))[:280], "tests_from": ta["model"]}
 
 
 if __name__ == "__main__":

@@ -48,7 +48,9 @@ single-model developer stays the default. Runtime-neutral, so it works in every 
   council cannot reconcile, it surfaces the disagreement rather than forcing a synthesis.
 - The verify stage reuses the test agents (`test-author` and `test-runner`) on models distinct from the
   council; a failing verify triggers exactly one refine round.
-- Always one synthesized, test-checked result, plus an inspectable council transcript on request.
+- Always one result, labelled for what it is: a synthesis that was test-checked, or one that names a failed
+  lead, the absence of verification, a silent member or a cut-off text (see
+  [council-honest-result](council-honest-result.md)), plus an inspectable council transcript on request.
 - Every run records its proposals, critiques, disagreements, synthesis rationale and verify result to the
   audit ledger, so `corpus` and `knowledge` derive from it. No untrusted-input path: the council runs in the
   operator's own produce session, so its inputs are trusted.
