@@ -26,6 +26,7 @@ RECIPE="$REPO_ROOT/recipes/documentation.yaml"
 _trail() {
   local led="${ASDD_ACTIVITY_LOG:-.asdd-work/audit.jsonl}" v=completed
   [ -f "$OUT" ] && grep -qi 'dry run' "$OUT" 2>/dev/null && v=dry-run
+  [ -f "$OUT" ] && grep -qi 'did not complete' "$OUT" 2>/dev/null && v=error
   python3 "$REPO_ROOT/cli/audit.py" append --ledger "$led" --role documentation --action documentation.run \
     --authorizing-decision "post-merge documentation agent (trusted)" --verdict "$v" \
     --reasoning "documentation agent ran on ${CHANGE_REF}" >/dev/null 2>&1 || true
@@ -39,17 +40,30 @@ trap _trail EXIT
 python3 "$REPO_ROOT/cli/operate-guard.py" "$RECIPE" --input trusted \
   || { echo "docsync: operate-guard refused this run" >&2; exit 1; }
 
+# A dry run is the runtime NOT being wired (or Goose absent). The wiring advice is only true then, so it
+# is printed only for `dryrun <reason> wire`; a wired run that fails goes through failed() instead.
 dryrun() {
   {
     echo "## Documentation agent - dry run"
     echo
     echo "$1"
+    if [ "${2:-}" = wire ]; then
+      echo
+      echo "It would run the documentation agent against \`${CHANGE_REF}\` and propose the doc, impact-log,"
+      echo "changelog, and knowledge-base updates the change needs. Wire the model to activate it:"
+      echo "set the repo \`ASDD_MODEL_URL\` variable and the \`ASDD_RUNTIME_TOKEN\` secret (the same config"
+      echo "the review gate uses), and give this role a model with \`asdd setup --set documentation=<model>\`"
+      echo "(or set the \`ASDD_MODEL\` variable as the fallback for every role)."
+    fi
+  } > "$OUT"
+}
+
+# A wired run that returned no usable proposal. Say so plainly: the model is connected, the run broke.
+failed() {
+  {
+    echo "## Documentation agent - run did not complete"
     echo
-    echo "It would run the documentation agent against \`${CHANGE_REF}\` and propose the doc, impact-log,"
-    echo "changelog, and knowledge-base updates the change needs. Wire the model to activate it:"
-    echo "set the repo \`ASDD_MODEL_URL\` variable and the \`ASDD_RUNTIME_TOKEN\` secret (the same config"
-    echo "the review gate uses), and give this role a model with \`asdd setup --set documentation=<model>\`"
-    echo "(or set the \`ASDD_MODEL\` variable as the fallback for every role)."
+    echo "$1"
   } > "$OUT"
 }
 
@@ -66,7 +80,7 @@ TOKEN="${!TOKEN_VAR:-}"
 
 # Not wired -> dry run (same fail-soft posture as the review gate's template).
 if [ -z "$TOKEN" ] || [ -z "$MODEL_URL" ] || [ -z "$MODEL" ]; then
-  dryrun "The model runtime is not wired (need an endpoint + key from ASDD_MODEL_URL / ASDD_RUNTIME_TOKEN or their __DOCUMENTATION variants, and a model from models.documentation or ASDD_MODEL)."
+  dryrun "The model runtime is not wired (need an endpoint + key from ASDD_MODEL_URL / ASDD_RUNTIME_TOKEN or their __DOCUMENTATION variants, and a model from models.documentation or ASDD_MODEL)." wire
   exit 0
 fi
 if ! command -v goose >/dev/null 2>&1; then
@@ -78,9 +92,18 @@ fi
 # the endpoint this role resolved to. Each `goose run` is its own process, so a per-role key and
 # endpoint stay scoped to this run and cannot leak into another agent's.
 rest="${MODEL_URL#*://}"
+# Goose's openai provider takes the FULL request path (default v1/chat/completions), not a base, so a bare
+# https://host/v1 endpoint would be requested as POST /v1 and 404. Accept either form, as connect-check does.
+case "$rest" in */*) path="${rest#*/}" ;; *) path="" ;; esac
+path="${path%%\?*}"; path="${path%/}"
+case "$path" in
+  "") path="v1/chat/completions" ;;
+  chat/completions | */chat/completions) ;;
+  *) path="$path/chat/completions" ;;
+esac
 export OPENAI_API_KEY="$TOKEN"
 export OPENAI_HOST="${MODEL_URL%%://*}://${rest%%/*}"
-export OPENAI_BASE_PATH="${rest#*/}"
+export OPENAI_BASE_PATH="$path"
 
 report="$(goose run --recipe "$RECIPE" --provider openai --model "$MODEL" \
   --params instructed_by=asdd-docsync --params change_ref="$CHANGE_REF" 2>&1 || true)"
@@ -90,5 +113,5 @@ if printf '%s' "$report" | grep -q '## Proposed doc updates'; then
   printf '## Documentation agent - proposed doc updates for `%s`\n\n' "$CHANGE_REF" > "$OUT"
   printf '%s\n' "$report" | sed -n '/## Proposed doc updates/,$p' >> "$OUT"
 else
-  dryrun "The documentation agent did not return a proposal (runtime error or empty output); a human should sync the docs."
+  failed "The documentation agent is wired but returned no proposal (runtime error or empty output), so no docs were proposed; a human should sync the docs and check the job log."
 fi
