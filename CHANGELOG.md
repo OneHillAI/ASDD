@@ -52,6 +52,15 @@ draft, so pin a conformance claim to a commit or date.
   cause instead of burning the full server timeout on every retry.
 
 ### Fixed
+- **The developer council's result says what actually happened.** A reasoning lead that spent its whole
+  token budget thinking returned no text, and the orchestrator silently fell back to the first proposal, so
+  the "synthesis" was one member's draft; with no test runner wired it reported "verify passed", recorded
+  the ledger verdict `pass`, and the knowledge view took it as an `exemplar`. The header, transcript and
+  ledger now name a failed lead (`error`), an unverified result (`unverified`), a member that gave no
+  answer and any text cut off at the token cap, and none of those is recorded as an exemplar. A call stopped
+  at the cap with no text is no longer retried. An optional `dev_council.reasoning_effort` is sent on every
+  council call, so an operator can lower a reasoning model's spend. Reported from two live runs. Spec:
+  [council-honest-result](docs/specs/council-honest-result.md).
 - **The post-merge test and documentation runners work against a wired runtime, and say so when they do
   not.** `test.sh` passed `change_ref` to a recipe whose parameter is `pr`, so the test agent never
   started, and the failure was hidden; the recipe also never printed the `## Test result` heading

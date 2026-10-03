@@ -260,7 +260,9 @@ asdd dev-council --change my-change --transcript council.json
 
 Wire the models like the rest of the fleet (shared `ASDD_MODEL_URL` + `ASDD_RUNTIME_TOKEN`, or per-member
 `__COUNCIL_<i>` variants). It records its process to the ledger, so the corpus and knowledge base learn
-from it. Full detail: [cli/README.md](https://github.com/OneHillAI/ASDD/blob/main/cli/README.md) and the
+from it. Read the header of the result before trusting it: it says when the lead returned nothing, when
+nothing verified the result, and when a draft was cut off at the token cap. If a reasoning model keeps
+using its whole token budget thinking, add `reasoning_effort: low` under `dev_council`. Full detail: [cli/README.md](https://github.com/OneHillAI/ASDD/blob/main/cli/README.md) and the
 contract in [agents/runtime.md](https://github.com/OneHillAI/ASDD/blob/main/agents/runtime.md).
 
 ## Share the recipes

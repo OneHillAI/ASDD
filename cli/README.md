@@ -397,7 +397,18 @@ dev_council:
   models: ["provider:a", "provider:b", "provider:c"]   # 2 to 5; the LAST is the lead synthesiser
   max_critique_rounds: 1
   max_refine_rounds: 1
+  max_tokens: 4000          # per model call
+  reasoning_effort: low     # optional; sent on every council call; unset = the provider's default
 ```
+
+A reasoning model can spend the whole `max_tokens` budget on hidden reasoning and return no answer, so
+`reasoning_effort: low` is worth setting for one. The result never passes such a run off as a clean
+synthesis: the header and the transcript name a **lead that returned nothing** (the draft is then one
+proposal, not a synthesis), a result **nothing verified** (no test runner wired), a member that **gave no
+answer**, and any text **cut off at the token cap**. The ledger records `error` for a failed lead and
+`unverified` for an unchecked result instead of `pass`, and neither a fallback, an unverified nor a cut-off
+result is recorded as an `exemplar`. A call that was stopped at the cap with no text is not retried, since
+it would spend the same budget again.
 
 Bring the models either way: a shared `ASDD_MODEL_URL` + `ASDD_RUNTIME_TOKEN` with the model names above,
 or per-member `ASDD_MODEL_URL__COUNCIL_<i>` / `ASDD_RUNTIME_TOKEN__COUNCIL_<i>`. It is **spec-and-test
