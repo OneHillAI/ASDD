@@ -42,7 +42,7 @@ cat >"$T/shim/rm" <<'SHIM'
 # Test shim: refuse any rm operand that resolves outside the sandbox root, and record the attempt.
 for a in "$@"; do
   case "$a" in -*) continue ;; esac
-  r=$(/usr/bin/python3 -I -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$a" 2>/dev/null || echo "?")
+  r=$("$ASDD_TEST_PY" -I -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$a" 2>/dev/null || echo "?")
   case "$r" in
     "$ASDD_TEST_ROOT"/*) ;;
     *) echo "rm $a -> $r" >>"$ASDD_TEST_ROOT/violations"; echo "rm: blocked, outside the test sandbox: $r" >&2; exit 99 ;;
@@ -51,6 +51,13 @@ done
 exec /bin/rm "$@"
 SHIM
 chmod 755 "$T/shim/rm"
+
+# Give the installer the real python3, not a stub. On macOS /usr/bin/python3 can be Apple's stub, which runs
+# xcrun and writes a cache file outside the sandbox root; the sandbox rightly blocks that and the noise breaks
+# the output checks. The real interpreter does not do that.
+PY_REAL=$(python3 -I -c 'import os,sys; print(os.path.realpath(sys.executable))')
+[ -x "$PY_REAL" ] || { echo "install.test.sh: cannot find the python3 interpreter ($PY_REAL)"; exit 2; }
+ln -s "$PY_REAL" "$T/shim/python3"
 
 # ---- OS-level sandbox (macOS) -----------------------------------------------------------------------------------
 SBX=()
@@ -72,13 +79,13 @@ BASE_URL_FOR_RUN=""
 # inst ARGS... : run the installer isolated. Sets OUT (stdout+stderr) and RC.
 inst() {
   OUT=$("${SBX[@]+"${SBX[@]}"}" env -i HOME="$T/home" PATH="$T/shim:/usr/bin:/bin:/usr/sbin:/sbin" TMPDIR="$T/tmp" \
-        ASDD_TEST_ROOT="$T" ASDD_BASE_URL="${BASE_URL_FOR_RUN:-file://$T/rel}" "${EXTRA_ENV[@]+"${EXTRA_ENV[@]}"}" \
+        ASDD_TEST_ROOT="$T" ASDD_TEST_PY="$PY_REAL" ASDD_BASE_URL="${BASE_URL_FOR_RUN:-file://$T/rel}" "${EXTRA_ENV[@]+"${EXTRA_ENV[@]}"}" \
         /bin/sh "$INSTALL" "$@" 2>&1)
   RC=$?
 }
 # sbxrun CMD... : run something else (a launcher) with the same isolation.
 sbxrun() {
-  "${SBX[@]+"${SBX[@]}"}" env -i HOME="$T/home" PATH="$T/shim:/usr/bin:/bin:/usr/sbin:/sbin" TMPDIR="$T/tmp" ASDD_TEST_ROOT="$T" "$@" 2>&1
+  "${SBX[@]+"${SBX[@]}"}" env -i HOME="$T/home" PATH="$T/shim:/usr/bin:/bin:/usr/sbin:/sbin" TMPDIR="$T/tmp" ASDD_TEST_ROOT="$T" ASDD_TEST_PY="$PY_REAL" "$@" 2>&1
 }
 
 # mkrel RELDIR VERSION [MODE] : publish a fake release under $T/rel/RELDIR.
