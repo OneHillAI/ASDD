@@ -104,7 +104,9 @@ with tarfile.open(path, "w:gz") as tf:
     if mode == "twotops":  add(tf, "other/file", b"x")
 digest = hashlib.sha256(open(path, "rb").read()).hexdigest()
 if mode == "badsum": digest = "0" * 64
-if mode != "nosum":
+if mode == "nosum":
+    if os.path.exists(path + ".sha256"): os.unlink(path + ".sha256")
+else:
     open(path + ".sha256", "w").write(digest + "  asdd-kit.tar.gz\n")
 PY
 }
@@ -157,10 +159,13 @@ EXTRA_ENV=("GITHUB_PATH=$H/ghpath"); inst install --version 1.2.3 --prefix "$H/p
 if [ "$RC" = 0 ] && grep -qxF "$H/bin" "$H/ghpath"; then ok "the bin dir is appended to \$GITHUB_PATH"; else bad "GITHUB_PATH not updated (rc=$RC): $OUT"; fi
 
 # 5. archive and checksum refusals leave everything untouched
-for mode in badsum nosum dotdot absolute symlink twotops wrongcli; do
+#    Each case must be refused by the installer's own check (its message), not merely by tar failing later.
+for spec in "badsum:checksum mismatch" "nosum:download failed" "dotdot:unsafe path" "absolute:unsafe path" \
+            "symlink:contains links" "twotops:single top-level" "wrongcli:refusing to install"; do
+  mode=${spec%%:*}; msg=${spec#*:}
   newhome "mode-$mode"; mkrel download/v2.0.0 2.0.0 "$mode"; before=$(snap "$H")
   inst install --version 2.0.0 --prefix "$H/p" --bin-dir "$H/bin"
-  refused_untouched "a '$mode' release is refused" "$before"
+  refused_untouched "a '$mode' release is refused ($msg)" "$before" "$msg"
 done
 newhome mismatch; mkrel download/v2.0.1 2.0.0; before=$(snap "$H")
 inst install --version 2.0.1 --prefix "$H/p" --bin-dir "$H/bin"
