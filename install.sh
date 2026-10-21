@@ -66,6 +66,7 @@ check_dir_arg() { # name value
     /*)  ;;
     *)   die "$1 must be an absolute path (got: $2)" ;;
   esac
+  # shellcheck disable=SC1003  # the '\' pattern is a literal backslash
   case "$2" in
     *'"'*|*'$'*|*'`'*|*'\'*|*"$NL"*) die "$1 contains a character that is not allowed (quote, \$, backtick, backslash, newline)" ;;
     */..|*/../*|*/.|*/./*|*//*)      die "$1 must be a plain path with no '.', '..' or '//' components (got: $2)" ;;

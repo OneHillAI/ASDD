@@ -27,6 +27,7 @@ case "$T" in /*/asdd-install-test.??????) ;; *) echo "install.test.sh: unexpecte
 : >"$T/$SENTINEL" || { echo "install.test.sh: cannot write the sentinel"; exit 2; }
 mkdir "$T/home" "$T/tmp" "$T/shim" "$T/h" "$T/rel"
 
+# shellcheck disable=SC2329  # runs from the EXIT trap
 cleanup_root() {
   # Remove $T only if it is still exactly the directory this run made.
   [ -n "${T:-}" ] && [ -d "$T" ] && [ ! -L "$T" ] && [ -f "$T/$SENTINEL" ] || return 0
@@ -135,7 +136,8 @@ if [ "$RC" = 0 ] && [ "$(sbxrun "$H/bin/asdd" --version)" = "asdd 1.2.3" ] \
    && [ -L "$H/p/current" ] && [ "$(readlink "$H/p/current")" = "versions/1.2.3" ] && [ -f "$H/p/versions/1.2.3/.asdd-install" ]; then
   ok "a pinned version installs, links, and runs"
 else bad "pinned install failed (rc=$RC): $OUT"; fi
-if ls "$T/tmp" | grep -q '^asdd-install\.'; then bad "the installer left its scratch directory behind"; else ok "scratch directory is cleaned up"; fi
+left=0; for d in "$T"/tmp/asdd-install.*; do [ -e "$d" ] && left=1; done
+if [ "$left" = 1 ]; then bad "the installer left its scratch directory behind"; else ok "scratch directory is cleaned up"; fi
 
 # 2. latest, upgrade, idempotence
 mkrel latest/download 1.2.5
@@ -170,7 +172,7 @@ done
 newhome mismatch; mkrel download/v2.0.1 2.0.0; before=$(snap "$H")
 inst install --version 2.0.1 --prefix "$H/p" --bin-dir "$H/bin"
 refused_untouched "a release holding a different version than asked is refused" "$before" "asked for 2.0.1"
-[ ! -e "$T/escaped" ] && [ ! -e "$T/rel/escaped" ] && ok "nothing was extracted outside the scratch directory" || bad "an unsafe archive wrote outside its directory"
+if [ ! -e "$T/escaped" ] && [ ! -e "$T/rel/escaped" ]; then ok "nothing was extracted outside the scratch directory"; else bad "an unsafe archive wrote outside its directory"; fi
 
 # 6. things the installer does not own
 newhome foreign-bin; mkdir -p "$H/bin"; printf '#!/bin/sh\necho mine\n' >"$H/bin/asdd"; chmod 755 "$H/bin/asdd"; before=$(snap "$H")
@@ -203,6 +205,7 @@ done
 
 # 8. directory arguments
 newhome dirs; before=$(snap "$H")
+# shellcheck disable=SC2016  # '$b' is meant literally: a dollar sign must be refused, not expanded
 dirtests=("--prefix:relative/path" "--prefix:/" "--prefix:$T/home" "--prefix:$H/../x" "--prefix:$H/p/../../x"
           "--prefix:$H//p" '--prefix:/tmp/a$b' "--prefix:" "--bin-dir:bin" "--bin-dir:")
 for spec in "${dirtests[@]}"; do
@@ -211,18 +214,22 @@ for spec in "${dirtests[@]}"; do
   if [ "$RC" = 0 ] || [ "$(snap "$H")" != "$before" ]; then bad "$flag '$val' was accepted (rc=$RC): $OUT"; else ok "$flag '$val' is refused"; fi
 done
 inst install --version 1.2.3 --prefix
-[ "$RC" != 0 ] && ok "an option with no value is refused" || bad "a bare --prefix was accepted"
+if [ "$RC" != 0 ]; then ok "an option with no value is refused"; else bad "a bare --prefix was accepted"; fi
 
 # 9. where it downloads from
 newhome url; before=$(snap "$H")
 BASE_URL_FOR_RUN="http://example.invalid/releases"; inst install --version 1.2.3 --prefix "$H/p" --bin-dir "$H/bin"; BASE_URL_FOR_RUN=""
 refused_untouched "a plain-http base URL is refused" "$before" "https:// or file://"
 inst install --version 1.2.3 --prefix "$H/p" --bin-dir "$H/bin"
-printf '%s' "$OUT" | grep -q 'warning: using ASDD_BASE_URL=' && ok "overriding the base URL prints a warning" || bad "no warning when ASDD_BASE_URL is overridden"
+if printf '%s' "$OUT" | grep -q 'warning: using ASDD_BASE_URL='; then ok "overriding the base URL prints a warning"; else bad "no warning when ASDD_BASE_URL is overridden"; fi
 
 # 10. the guardrails themselves held
 if [ -s "$T/violations" ]; then bad "the installer tried to delete outside the sandbox: $(cat "$T/violations")"; else ok "no deletion was attempted outside the sandbox"; fi
-stray=$(ls -A "$T/home" 2>/dev/null | grep -v -e '^\.asdd$' -e '^\.local$' -e '^Library$' | tr '\n' ' ')
+stray=""
+for f in "$T"/home/* "$T"/home/.[!.]*; do
+  [ -e "$f" ] || continue
+  case "${f##*/}" in .asdd|.local|Library) ;; *) stray="$stray ${f##*/}" ;; esac
+done
 if [ -n "$stray" ]; then bad "unexpected files appeared in the test HOME: $stray"; else ok "nothing stray appeared in HOME"; fi
 
 if [ "$fail" = 0 ]; then echo "install self-test: PASS ($n checks)"; else echo "install self-test: FAIL"; fi
