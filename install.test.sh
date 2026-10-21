@@ -155,6 +155,15 @@ else bad "latest install failed (rc=$RC): $OUT"; fi
 inst install --version 1.2.3 --prefix "$H/p" --bin-dir "$H/bin"
 if [ "$RC" = 0 ] && [ "$(sbxrun "$H/bin/asdd" --version)" = "asdd 1.2.3" ]; then ok "re-installing an installed version replaces it cleanly"; else bad "re-install failed (rc=$RC): $OUT"; fi
 
+# 2b. the invocation the README documents: the script text handed to `sh -c`, version flags after it
+newhome documented
+OUT=$("${SBX[@]+"${SBX[@]}"}" env -i HOME="$T/home" PATH="$T/shim:/usr/bin:/bin:/usr/sbin:/sbin" TMPDIR="$T/tmp" \
+      ASDD_TEST_ROOT="$T" ASDD_TEST_PY="$PY_REAL" ASDD_BASE_URL="file://$T/rel" \
+      /bin/sh -c "$(cat "$INSTALL")" sh --version 1.2.3 --prefix "$H/p" --bin-dir "$H/bin" 2>&1); RC=$?
+if [ "$RC" = 0 ] && [ "$(sbxrun "$H/bin/asdd" --version)" = "asdd 1.2.3" ]; then ok "the documented 'sh -c \"\$(curl ...)\" sh --version X' form installs"; else bad "documented invocation failed (rc=$RC): $OUT"; fi
+inst --help
+if [ "$RC" = 0 ] && printf '%s' "$OUT" | grep -q '^Usage: install.sh'; then ok "--help prints usage"; else bad "--help printed no usage (rc=$RC): $OUT"; fi
+
 # 3. defaults live under HOME
 newhome defaults
 inst install --version 1.2.3

@@ -73,14 +73,14 @@ Inside the read-only review job, three layers stack: **deterministic rules** ove
 ### 1. Install and scaffold
 
 ```
-curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh | sh
+sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)"
 asdd init --goose /path/to/your-repo
 ```
 
 The installer puts `asdd` in `~/.local/bin` and keeps each version under `~/.asdd/versions/`. Before it installs anything it checks the archive's SHA-256, checks that the archive holds one `asdd-X.Y.Z/` tree with no absolute paths, `..` or links, and runs the extracted CLI once to confirm the version. It never overwrites an `asdd` or a directory it did not create, and `sh install.sh uninstall` removes only what it installed. To pin a version in CI, add one step; the installer puts its bin directory on `$GITHUB_PATH` for the steps after it:
 
 ```yaml
-- run: curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh | sh -s -- --version 0.1.0
+- run: sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.1.0
 - run: asdd doctor
 ```
 

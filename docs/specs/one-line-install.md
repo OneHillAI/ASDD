@@ -12,8 +12,8 @@ on.
 
 ## Outcomes
 
-- `curl -fsSL <release>/install.sh | sh` installs the latest release; `... | sh -s -- --version X.Y.Z` installs
-  exactly that release. Both work in a GitHub Actions step, and the installer adds its bin directory to
+- `sh -c "$(curl -fsSL <release>/install.sh)"` installs the latest release; adding `sh --version X.Y.Z` after
+  it installs exactly that release. Both work in a GitHub Actions step, and the installer adds its bin directory to
   `$GITHUB_PATH` there.
 - The installer downloads a release archive and its SHA-256, and installs nothing if the checksum does not
   match, the archive holds anything but one `asdd-X.Y.Z/` tree, a path is absolute or contains `..`, the
@@ -44,7 +44,7 @@ on.
   else is refused before any download or removal.
 - `--prefix` and `--bin-dir` must be absolute, free of `..`, `.` and `//` components, and neither `/` nor the
   user's home directory itself.
-- The body of `install.sh` runs from a function called on the last line, so a truncated `curl | sh` runs
+- The body of `install.sh` runs from a function called on the last line, so a truncated download runs
   nothing.
 - Tests run the installer confined to one temp root: a fake `HOME`, an `rm` shim that refuses operands outside
   it, and on macOS an OS sandbox denying writes elsewhere. No test deletes anything by an unchecked variable.

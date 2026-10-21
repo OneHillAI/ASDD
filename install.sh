@@ -1,13 +1,13 @@
 #!/bin/sh
 # ASDD installer: one line puts the `asdd` CLI on a developer machine or a CI runner.
 #
-#   curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh | sh
-#   curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh | sh -s -- --version 0.1.0
+#   sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)"
+#   sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.1.0
 #   sh install.sh uninstall
 #
 # In GitHub Actions, add one step before anything that calls `asdd`; the installer puts its bin dir on
 # $GITHUB_PATH for you:
-#   - run: curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh | sh -s -- --version 0.1.0
+#   - run: sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.1.0
 #
 # What it does: downloads a release archive, verifies its SHA-256, checks the archive holds nothing but one
 # `asdd-X.Y.Z/` tree (no absolute paths, no `..`, no links), runs the extracted CLI once to confirm it is the
@@ -22,7 +22,7 @@
 #   --bin-dir  where the `asdd` launcher goes   (default: $HOME/.local/bin)
 #   ASDD_BASE_URL overrides the release location (https:// or file://); it prints a warning.
 #
-# The body is wrapped in main() and called on the last line so a truncated `curl | sh` runs nothing.
+# The body is wrapped in main() and called on the last line so a truncated download runs nothing.
 set -eu
 
 DEFAULT_BASE_URL="https://github.com/OneHillAI/ASDD/releases"
@@ -36,7 +36,15 @@ TMP_WORK=""
 die()  { printf 'asdd-install: error: %s\n' "$*" >&2; exit 1; }
 warn() { printf 'asdd-install: warning: %s\n' "$*" >&2; }
 say()  { printf 'asdd-install: %s\n' "$*"; }
-usage() { sed -n '2,26p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; }
+usage() {
+  # shellcheck disable=SC2016  # $HOME is shown literally, not expanded
+  printf '%s\n' \
+    'Usage: install.sh [install|uninstall] [--version X.Y.Z] [--prefix DIR] [--bin-dir DIR]' \
+    '  --version  a release version, exactly X.Y.Z (default: the latest release)' \
+    '  --prefix   where versions are kept          (default: $HOME/.asdd)' \
+    '  --bin-dir  where the `asdd` launcher goes   (default: $HOME/.local/bin)' \
+    'ASDD_BASE_URL overrides the release location (https:// or file://); it prints a warning.'
+}
 
 # Only the scratch dir this run created (mktemp, always named asdd-install.*) is ever removed on exit.
 cleanup() {

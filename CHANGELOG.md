@@ -7,8 +7,8 @@ draft, so pin a conformance claim to a commit or date.
 ## [Unreleased]
 
 ### Added
-- **A one-line install for the `asdd` CLI.** `curl -fsSL .../releases/latest/download/install.sh | sh` (or
-  `... | sh -s -- --version X.Y.Z` in CI) downloads a release archive, verifies its SHA-256, checks that it holds
+- **A one-line install for the `asdd` CLI.** `sh -c "$(curl -fsSL .../releases/latest/download/install.sh)"` (add
+  `sh --version X.Y.Z` after it to pin, in CI) downloads a release archive, verifies its SHA-256, checks that it holds
   one `asdd-X.Y.Z/` tree with no absolute paths, `..` or links, runs the extracted CLI to confirm the version,
   and installs it under `~/.asdd` with a launcher in `~/.local/bin`. It adds its bin directory to `$GITHUB_PATH`
   in Actions, never overwrites an `asdd` or a directory it did not create, deletes only
