@@ -16,7 +16,14 @@ Zero to a governed agentic-dev loop. You need Python 3.9+ and [Goose](https://bl
 
 ## 1. Get the CLI on your PATH
 
-Clone ASDD, then either symlink the launcher (pip-free) or install it:
+The quickest route is the one-line installer; it puts a pinned, checksum-verified release on your PATH
+(see [the install guide](deploy.md#2-scaffold-asdd-into-your-repo)):
+
+```bash
+sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)"
+```
+
+To work from a checkout instead, clone ASDD, then either symlink the launcher (pip-free) or install it:
 
 ```bash
 ln -s "$PWD/asdd_cli.py" ~/.local/bin/asdd      # pip-free; or, with a recent pip:  pip install -e .

@@ -51,11 +51,39 @@ The ASDD recipes are provider-neutral; you set the model per run. See
 Install the CLI, then scaffold your repo:
 
 ```bash
-pip install git+https://github.com/OneHillAI/ASDD
+sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)"
 asdd init --goose /path/to/your-repo
 ```
 
-Or run `bash cli/init.sh --goose /path/to/your-repo` from a checkout.
+The installer puts `asdd` in `~/.local/bin` and keeps each version under `~/.asdd/versions/`. Flags go after the
+command: `--version X.Y.Z` pins a release, and `--prefix DIR` and `--bin-dir DIR` change those two locations, for
+example `sh -c "$(curl -fsSL ...)" sh --prefix DIR`. To remove it, run the same command with `sh uninstall` at the
+end; it removes what it installed and nothing else.
+
+### Install in CI
+
+Pin a version so a pipeline never changes under you. The installer adds its bin directory to `$GITHUB_PATH`, so
+the steps after it can call `asdd`:
+
+```yaml
+- run: sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.1.0
+- run: asdd doctor
+```
+
+### What the installer checks
+
+Before it installs anything it downloads the release archive and its SHA-256 and stops if they differ. It also
+stops if the archive holds anything but one `asdd-X.Y.Z/` tree, if a path is absolute or contains `..`, or if the
+archive contains links. It then runs the extracted CLI once and stops unless it reports the version you asked for.
+It never overwrites an `asdd` launcher or a directory it did not create, never edits your shell profile, and never
+uses `sudo`.
+
+The checksum and the archive come from the same release, so the checksum catches a corrupted or swapped download
+but does not prove who published it. Pin a version, and read
+[`install.sh`](https://github.com/OneHillAI/ASDD/blob/main/install.sh) first if you want to be sure what it does.
+
+To skip the installer, `pip install git+https://github.com/OneHillAI/ASDD` works, or run
+`bash cli/init.sh --goose /path/to/your-repo` from a checkout.
 
 This writes the constitution (`AGENTS.md`) and a pointer to it for the common assistants (`CLAUDE.md`,
 `.cursor/rules/asdd.mdc`; Codex reads `AGENTS.md` directly), `.asdd.yml`, the PR template and `CODEOWNERS`,

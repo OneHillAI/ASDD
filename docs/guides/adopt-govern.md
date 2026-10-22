@@ -9,11 +9,12 @@ covered by [operate-goose](operate-goose.md) and [operate-other](operate-other.m
 Install the CLI, then scaffold your repo:
 
 ```bash
-pip install git+https://github.com/OneHillAI/ASDD
+sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)"
 asdd init /path/to/your-repo
 ```
 
-Or run `bash cli/init.sh /path/to/your-repo` from a checkout.
+To pin the version in CI, see [Install in CI](deploy.md#install-in-ci). Or run
+`bash cli/init.sh /path/to/your-repo` from a checkout.
 
 It writes [`AGENTS.md`](https://github.com/OneHillAI/ASDD/blob/main/AGENTS.md) (the constitution), `.asdd.yml` (config), the PR template (the
 disclosure block), and `CODEOWNERS` from your protected paths, and ensures the lane labels. Add `--goose`

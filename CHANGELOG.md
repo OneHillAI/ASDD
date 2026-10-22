@@ -15,7 +15,8 @@ draft, so pin a conformance claim to a commit or date.
   `<prefix>/versions/X.Y.Z` trees carrying its own marker, and has an `uninstall`. A new `release.yml` builds
   the archive from a `vX.Y.Z` tag, installs from it, and only then publishes. The installer's tests run it
   confined (fake `HOME`, an `rm` shim, and an OS sandbox on macOS), and `install.mutation.sh` removes each
-  safety check in turn and requires the tests to fail.
+  safety check in turn and requires the tests to fail. The install guide and the pages that told readers to
+  `pip install` now document it.
 - **The audit trail is complete: every agent's records reach the sink, not only the reviewer's.** Before,
   only the review exported, so a deployment that turned on `audit.sink` captured the reviewer's decisions
   but lost the produce side (the developer/council "coding"), the test and documentation agents, and the

@@ -30,8 +30,9 @@ feedback loop over the identical code, not a preview of it.
 Each command is a short Markdown prompt whose only job is to invoke a CLI subcommand and read back its
 output. To bring your assistant of choice:
 
-1. Install the CLI: `pip install git+https://github.com/OneHillAI/ASDD` (or `pip install .` from a
-   checkout; the wheel is self-contained).
+1. Install the CLI: `sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)"` (see [the install guide](deploy.md#2-scaffold-asdd-into-your-repo)),
+   or `pip install git+https://github.com/OneHillAI/ASDD`, or `pip install .` from a checkout (the wheel is
+   self-contained).
 2. Copy the four prompts from [`.claude/commands/asdd/`](../../.claude/commands/asdd/) into your
    assistant's command format. The bodies are plain instructions; only the file location and front
    matter are Claude-Code-specific.
