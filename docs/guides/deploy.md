@@ -57,8 +57,8 @@ asdd init --goose /path/to/your-repo
 
 The installer puts `asdd` in `~/.local/bin` and keeps each version under `~/.asdd/versions/`. Flags go after the
 command: `--version X.Y.Z` pins a release, and `--prefix DIR` and `--bin-dir DIR` change those two locations, for
-example `sh -c "$(curl -fsSL ...)" sh --prefix DIR`. To remove it, run the same command with `sh uninstall` at the
-end; it removes what it installed and nothing else.
+example `sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --prefix DIR`. To remove it, run the same command with `sh uninstall`
+at the end; it removes what it installed and nothing else.
 
 ### Install in CI
 

@@ -3,7 +3,8 @@
 #
 #   sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)"
 #   sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.2.0
-#   sh install.sh uninstall
+#   sh install.sh uninstall                   (from a saved copy of this file)
+#   sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh uninstall   (without one)
 #
 # In GitHub Actions, add one step before anything that calls `asdd`; the installer puts its bin dir on
 # $GITHUB_PATH for you:
