@@ -15,7 +15,7 @@ import os
 import subprocess
 import sys
 
-__version__ = "0.1.0"  # keep in sync with pyproject.toml
+__version__ = "0.2.0"  # keep in sync with pyproject.toml
 
 HERE = os.path.dirname(os.path.realpath(__file__))  # realpath: a symlink resolves to the checkout
 

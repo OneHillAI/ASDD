@@ -2,12 +2,12 @@
 # ASDD installer: one line puts the `asdd` CLI on a developer machine or a CI runner.
 #
 #   sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)"
-#   sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.1.0
+#   sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.2.0
 #   sh install.sh uninstall
 #
 # In GitHub Actions, add one step before anything that calls `asdd`; the installer puts its bin dir on
 # $GITHUB_PATH for you:
-#   - run: sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.1.0
+#   - run: sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.2.0
 #
 # What it does: downloads a release archive, verifies its SHA-256, checks the archive holds nothing but one
 # `asdd-X.Y.Z/` tree (no absolute paths, no `..`, no links), runs the extracted CLI once to confirm it is the
@@ -239,7 +239,7 @@ main() {
     case "$1" in
       --version)  [ $# -ge 2 ] && [ -n "$2" ] || die "--version needs a value (a release version, X.Y.Z)"
                   VERSION=${2#v}
-                  [ -n "$VERSION" ] || die "'$2' is not a release version (expected X.Y.Z, for example 0.1.0)"
+                  [ -n "$VERSION" ] || die "'$2' is not a release version (expected X.Y.Z, for example 0.2.0)"
                   shift 2 ;;
       --prefix)   [ $# -ge 2 ] && [ -n "$2" ] || die "--prefix needs a directory"; PREFIX=$2; shift 2 ;;
       --bin-dir)  [ $# -ge 2 ] && [ -n "$2" ] || die "--bin-dir needs a directory"; BIN_DIR=$2; shift 2 ;;
@@ -249,7 +249,7 @@ main() {
   done
 
   if [ -n "$VERSION" ]; then
-    is_release_version "$VERSION" || die "'$VERSION' is not a release version (expected X.Y.Z, for example 0.1.0)"   # guard:version
+    is_release_version "$VERSION" || die "'$VERSION' is not a release version (expected X.Y.Z, for example 0.2.0)"   # guard:version
   fi
   [ -n "$PREFIX" ]  || { [ -n "${HOME:-}" ] || die "HOME is not set; pass --prefix"; PREFIX="$HOME/.asdd"; }
   [ -n "$BIN_DIR" ] || { [ -n "${HOME:-}" ] || die "HOME is not set; pass --bin-dir"; BIN_DIR="$HOME/.local/bin"; }

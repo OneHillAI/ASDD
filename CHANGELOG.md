@@ -6,6 +6,8 @@ draft, so pin a conformance claim to a commit or date.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-22
+
 ### Added
 - **A one-line install for the `asdd` CLI.** `sh -c "$(curl -fsSL .../releases/latest/download/install.sh)"` (add
   `sh --version X.Y.Z` after it to pin, in CI) downloads a release archive, verifies its SHA-256, checks that it holds
@@ -155,4 +157,5 @@ Initial public release.
   runtime does and records each run). The tester never runs automatically on an untrusted open PR.
 - Optional profiles: **Assure** (integrity attestation) and the **spec-driven** profile.
 
+[0.2.0]: https://github.com/OneHillAI/ASDD/releases/tag/v0.2.0
 [0.1.0]: https://github.com/OneHillAI/ASDD/releases/tag/v0.1.0

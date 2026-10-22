@@ -66,7 +66,7 @@ Pin a version so a pipeline never changes under you. The installer adds its bin 
 the steps after it can call `asdd`:
 
 ```yaml
-- run: sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.1.0
+- run: sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.2.0
 - run: asdd doctor
 ```
 
