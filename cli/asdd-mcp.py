@@ -193,7 +193,7 @@ def main():
             if method == "initialize":
                 result = {"protocolVersion": msg.get("params", {}).get("protocolVersion", "2025-06-18"),
                           "capabilities": {"tools": {}},
-                          "serverInfo": {"name": "asdd-gates", "version": "0.1.0"}}
+                          "serverInfo": {"name": "asdd-gates", "version": "0.2.0"}}
             elif method == "notifications/initialized":
                 continue
             elif method == "ping":

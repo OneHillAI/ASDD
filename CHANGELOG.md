@@ -6,6 +6,8 @@ draft, so pin a conformance claim to a commit or date.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-22
+
 ### Added
 - **A one-line install for the `asdd` CLI.** `sh -c "$(curl -fsSL .../releases/latest/download/install.sh)"` (add
   `sh --version X.Y.Z` after it to pin, in CI) downloads a release archive, verifies its SHA-256, checks that it holds
@@ -15,7 +17,8 @@ draft, so pin a conformance claim to a commit or date.
   `<prefix>/versions/X.Y.Z` trees carrying its own marker, and has an `uninstall`. A new `release.yml` builds
   the archive from a `vX.Y.Z` tag, installs from it, and only then publishes. The installer's tests run it
   confined (fake `HOME`, an `rm` shim, and an OS sandbox on macOS), and `install.mutation.sh` removes each
-  safety check in turn and requires the tests to fail.
+  safety check in turn and requires the tests to fail. The install guide and the pages that told readers to
+  `pip install` now document it.
 - **The audit trail is complete: every agent's records reach the sink, not only the reviewer's.** Before,
   only the review exported, so a deployment that turned on `audit.sink` captured the reviewer's decisions
   but lost the produce side (the developer/council "coding"), the test and documentation agents, and the
@@ -154,4 +157,5 @@ Initial public release.
   runtime does and records each run). The tester never runs automatically on an untrusted open PR.
 - Optional profiles: **Assure** (integrity attestation) and the **spec-driven** profile.
 
+[0.2.0]: https://github.com/OneHillAI/ASDD/releases/tag/v0.2.0
 [0.1.0]: https://github.com/OneHillAI/ASDD/releases/tag/v0.1.0

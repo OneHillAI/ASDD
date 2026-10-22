@@ -26,7 +26,8 @@ on.
 
 - `install.sh` (POSIX `sh`), its test `install.test.sh`, and a mutation check `install.mutation.sh`.
 - `.github/workflows/release.yml` and `.github/workflows/install-test.yml`.
-- The README quick start and a changelog entry.
+- The README quick start, the install guide (`docs/guides/deploy.md`) and the pages that tell a reader how to
+  install the CLI (`adopt-govern`, `slash-commands`, `operate-goose`, `cli/README.md`), and a changelog entry.
 
 ## Out of scope
 

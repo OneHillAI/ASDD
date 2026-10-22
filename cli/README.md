@@ -3,7 +3,9 @@
 ## asdd (the unified CLI)
 
 One command for the whole toolkit, so you don't call the scripts by path. It dispatches to the
-tools below (which stay the single source of truth). Put it on your PATH by symlinking the launcher
+tools below (which stay the single source of truth). To install a release, use the one-line installer
+(`sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)"`; see the
+[install guide](../docs/guides/deploy.md#2-scaffold-asdd-into-your-repo)). From a checkout, put it on your PATH by symlinking the launcher
 (`ln -s "$PWD/asdd_cli.py" ~/.local/bin/asdd`; it resolves the symlink to find the tools) or, with a
 recent pip, `pip install -e .`. Or run it straight from a checkout: `python3 asdd_cli.py <command>`.
 See the [Goose quickstart](../docs/guides/operate-goose.md) for the end-to-end setup.
