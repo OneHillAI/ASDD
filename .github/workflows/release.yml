@@ -1,0 +1,56 @@
+# Publishes a release: the kit archive, its SHA-256, and install.sh, which is what the one-line install
+# downloads. Pushing a tag vX.Y.Z runs this; the tag must match the version in asdd_cli.py and pyproject.toml.
+# Before publishing it installs from the archive it just built, so a broken release never goes out.
+name: release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the GitHub release; nothing else in this job needs write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Tag matches the code's version
+        run: |
+          set -eu
+          want="${GITHUB_REF_NAME#v}"
+          cli=$(sed -n 's/^__version__ = "\([0-9.]*\)".*/\1/p' asdd_cli.py)
+          py=$(sed -n 's/^version = "\([0-9.]*\)".*/\1/p' pyproject.toml)
+          if [ "$want" != "$cli" ] || [ "$want" != "$py" ]; then
+            echo "::error::tag $GITHUB_REF_NAME, asdd_cli.py ($cli) and pyproject.toml ($py) must agree"; exit 1
+          fi
+      - name: Installer self-test
+        run: bash install.test.sh
+      - name: Build the archive
+        run: |
+          set -eu
+          v="${GITHUB_REF_NAME#v}"
+          mkdir dist
+          git archive --format=tar.gz --prefix="asdd-$v/" -o dist/asdd-kit.tar.gz HEAD
+          (cd dist && sha256sum asdd-kit.tar.gz > asdd-kit.tar.gz.sha256)
+          cp install.sh dist/install.sh
+      - name: Install from the built archive
+        run: |
+          set -eu
+          v="${GITHUB_REF_NAME#v}"
+          mkdir -p "$RUNNER_TEMP/rel/download/$GITHUB_REF_NAME"
+          cp dist/asdd-kit.tar.gz dist/asdd-kit.tar.gz.sha256 "$RUNNER_TEMP/rel/download/$GITHUB_REF_NAME/"
+          ASDD_BASE_URL="file://$RUNNER_TEMP/rel" sh dist/install.sh --version "$v" \
+            --prefix "$RUNNER_TEMP/asdd-home" --bin-dir "$RUNNER_TEMP/asdd-bin"
+          test "$("$RUNNER_TEMP/asdd-bin/asdd" --version)" = "asdd $v"
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          gh release create "$GITHUB_REF_NAME" dist/asdd-kit.tar.gz dist/asdd-kit.tar.gz.sha256 dist/install.sh \
+            --title "ASDD ${GITHUB_REF_NAME#v}" --generate-notes --verify-tag

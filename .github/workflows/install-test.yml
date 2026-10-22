@@ -1,0 +1,38 @@
+# Tests for the one-line installer (install.sh). The installer deletes directories, so the tests run it
+# confined: fake HOME, an rm shim, and on macOS an OS sandbox. See the header of install.test.sh.
+name: install-test
+
+on:
+  push:
+    branches: [main]
+    paths: ['install.sh', 'install.test.sh', 'install.mutation.sh', '.github/workflows/install-test.yml', '.github/workflows/release.yml']
+  pull_request:
+    branches: [main]
+    paths: ['install.sh', 'install.test.sh', 'install.mutation.sh', '.github/workflows/install-test.yml', '.github/workflows/release.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Installer self-test
+        run: bash install.test.sh
+
+  # Removes each safety check in turn and requires the tests to notice. The mutants are the dangerous
+  # installers, so this runs only where the OS sandbox exists (the script refuses to start without it).
+  mutation:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Mutation check
+        run: bash install.mutation.sh

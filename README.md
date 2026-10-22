@@ -73,9 +73,18 @@ Inside the read-only review job, three layers stack: **deterministic rules** ove
 ### 1. Install and scaffold
 
 ```
-pip install git+https://github.com/OneHillAI/ASDD
+sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)"
 asdd init --goose /path/to/your-repo
 ```
+
+The installer puts `asdd` in `~/.local/bin` and keeps each version under `~/.asdd/versions/`. Before it installs anything it checks the archive's SHA-256, checks that the archive holds one `asdd-X.Y.Z/` tree with no absolute paths, `..` or links, and runs the extracted CLI once to confirm the version. It never overwrites an `asdd` or a directory it did not create, and `sh install.sh uninstall` removes only what it installed. To pin a version in CI, add one step; the installer puts its bin directory on `$GITHUB_PATH` for the steps after it:
+
+```yaml
+- run: sh -c "$(curl -fsSL https://github.com/OneHillAI/ASDD/releases/latest/download/install.sh)" sh --version 0.1.0
+- run: asdd doctor
+```
+
+The checksum and the archive come from the same release, so it catches a corrupted or swapped download but does not prove who published it. Pin a version, and read `install.sh` first if you want to be sure what it does. `pip install git+https://github.com/OneHillAI/ASDD` still works if you prefer pip.
 
 `init` writes the constitution (`AGENTS.md`), the config (`.asdd.yml`), the gates and workflows, the PR template, `CODEOWNERS`, and the Goose operate recipes. Drop `--goose` for the govern layer only. To place every file by hand instead, the [deploy guide](docs/guides/deploy.md) lists them.
 
