@@ -5,8 +5,7 @@
 The review runtime (`.github/asdd/runtime/generic.sh` via `openai-compat.sh`) asks the model for a bare
 JSON object and then requires the raw response to parse as that object. A reasoning-capable model rarely
 complies exactly: it returns a paragraph of analysis before the object, wraps the object in a
-` ```json ` fence, or adds trailing commentary. That analysis usually contains its own braces (`def f()
-{ ... }`, `{x: 1}`), so the previous "strip fences, else slice from the first `{` to the last `}`"
+` ```json ` fence, or adds trailing commentary. That analysis usually contains its own braces (`def f() { ... }`, `{x: 1}`), so the previous "strip fences, else slice from the first `{` to the last `}`"
 recovery captured a span that was not valid JSON. The adapter then treated a perfectly good review as
 unparseable, retried, and finally fell back to a `live` placeholder: "The review runtime returned invalid
 output; a human should review manually." The agent had reviewed; its verdict was thrown away.
